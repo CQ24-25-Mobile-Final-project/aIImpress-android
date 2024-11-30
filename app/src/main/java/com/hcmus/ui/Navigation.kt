@@ -24,13 +24,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.hcmus.ui.aiimpress.AIImpressScreen
+import com.hcmus.ui.aiimpress.LoginScreen
 
 @Composable
 fun MainNavigation() {
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = "main") {
+        composable("login") { LoginScreen { navController.navigate("mainScreen") } }
         composable("main") { AIImpressScreen(modifier = Modifier.padding(16.dp)) }
-        // TODO: Add more destinations
     }
 }
