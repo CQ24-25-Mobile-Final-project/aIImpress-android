@@ -32,11 +32,9 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -55,8 +53,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.galleryapp.ui.components.MyTopAppBar
+import com.hcmus.ui.components.MyTopAppBar
 import com.hcmus.R
+import com.hcmus.ui.theme.MyApplicationTheme
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -119,7 +120,7 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                         Button(
                             onClick = { isRenameAlbumDropdownOption.value = false },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = Color.Black
                             )
                         ) {
@@ -150,7 +151,7 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                                 }
                             },
                             colors = ButtonDefaults.buttonColors( // Thay đổi màu nền và màu chữ
-                                containerColor = MaterialTheme.colorScheme.primaryContainer, // Màu nền
+                                containerColor = MaterialTheme.colorScheme.primary, // Màu nền
                                 contentColor = Color.Black // Màu chữ
                             ),
                             modifier = Modifier.padding(start = 16.dp)
@@ -169,7 +170,7 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                         Button(
                             onClick = { isSelectedDropdownOption.value = !isSelectedDropdownOption.value },
                             colors = ButtonDefaults.buttonColors( // Thay đổi màu nền và màu chữ
-                                containerColor = MaterialTheme.colorScheme.primaryContainer, // Màu nền
+                                containerColor = MaterialTheme.colorScheme.primary, // Màu nền
                                 contentColor = Color.Black // Màu chữ
                             ),
                             modifier = Modifier.padding(start = 16.dp)
@@ -183,7 +184,7 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                         Button(
                             onClick = { navController.navigate("SelectImageForAlbum") },
                             colors = ButtonDefaults.buttonColors( // Thay đổi màu nền và màu chữ
-                                containerColor = MaterialTheme.colorScheme.primaryContainer, // Màu nền
+                                containerColor = MaterialTheme.colorScheme.primary, // Màu nền
                                 contentColor = Color.Black // Màu chữ
                             ),
                             modifier = Modifier.padding(start = 16.dp)
@@ -207,8 +208,8 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    items(3) { index ->
-                        val photoId = photos[index]
+                    items(40) { index ->
+                        val photoId = photos[0]
                         val isSelected = selectedPhotos.contains(photoId)
 
                         BoxWithConstraints(
@@ -229,7 +230,7 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                             val screenWidth = maxWidth
 
                             Image(
-                                painter = painterResource(id = R.drawable.wallpaper),
+                                painter = painterResource(id = photoId),
                                 contentDescription = null,
                                 modifier = Modifier
                                     .size(screenWidth * 1f)
@@ -286,7 +287,7 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                             .width(250.dp)
                             .height(180.dp)
                             .clip(RoundedCornerShape(16.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .background(MaterialTheme.colorScheme.secondary)
                             .padding(16.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -361,7 +362,7 @@ fun FloatingButtonExample(icon: ImageVector, iconName: String, showDeletePopup: 
                         .width(250.dp)
                         .height(150.dp)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .background(MaterialTheme.colorScheme.secondary)
                         .padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -400,5 +401,7 @@ fun FloatingButtonExample(icon: ImageVector, iconName: String, showDeletePopup: 
 @Composable
 fun DisplayPhotoInAlbumPreview() {
     val mockNavController = rememberNavController() // Mock NavController cho Preview
-    DisplayPhotoInAlbum(navController = mockNavController)
+    MyApplicationTheme { // Thêm theme của bạn ở đây
+        DisplayPhotoInAlbum(navController = mockNavController)
+    }
 }

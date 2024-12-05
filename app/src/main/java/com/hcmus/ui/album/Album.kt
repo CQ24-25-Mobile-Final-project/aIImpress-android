@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -47,7 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.galleryapp.ui.components.MyTopAppBar
+import com.hcmus.ui.components.MyTopAppBar
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -99,7 +100,7 @@ fun MyAlbumScreen (navController: NavController) {
             if (isGridView) {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
-                    modifier = Modifier.fillMaxHeight()
+                    modifier = Modifier.wrapContentHeight()
                 ) {
                     items(10) { // Giả sử bạn có 10 album
                         Box (
@@ -182,7 +183,7 @@ fun AlbumItemGridView() {
     Column {
         BoxWithConstraints(
             modifier = Modifier.fillMaxWidth()
-                .fillMaxHeight()// Sử dụng toàn bộ không gian có sẵn
+                .wrapContentHeight()// Sử dụng toàn bộ không gian có sẵn
         ) {
             val screenWidth = maxWidth
             val screenHeight = maxHeight
@@ -219,7 +220,7 @@ fun BottomSheetExample() {
     Button(
         onClick = { showBottomSheet = true },
         colors = ButtonDefaults.buttonColors( // Thay đổi màu nền và màu chữ
-            containerColor = MaterialTheme.colorScheme.primaryContainer, // Màu nền
+            containerColor = MaterialTheme.colorScheme.secondary, // Màu nền
             contentColor = Color.Black // Màu chữ
         ),
         modifier = Modifier.padding(8.dp)

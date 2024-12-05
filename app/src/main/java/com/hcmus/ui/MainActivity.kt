@@ -27,23 +27,24 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.hcmus.ui.album.AddNewAlbum
 import com.hcmus.ui.album.DisplayPhotoInAlbum
+import com.hcmus.ui.album.ImagePickerScreen
 import com.hcmus.ui.album.MyAlbumScreen
 import com.hcmus.ui.album.SelectImageForAlbum
 import dagger.hilt.android.AndroidEntryPoint
 import com.hcmus.ui.theme.MyApplicationTheme
-
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MyApplicationTheme {
+            MyApplicationTheme(dynamicColor = false) {
                 var navController = rememberNavController()
                 Scaffold(
                     topBar = {
@@ -73,6 +74,11 @@ class MainActivity : ComponentActivity() {
 
                             composable("DisplayPhotoInAlbum") {
                                 DisplayPhotoInAlbum(navController = navController)
+                            }
+
+                            composable("imagePicker") {
+                                val context = LocalContext.current
+                                ImagePickerScreen(context = context)
                             }
                         }
                     }

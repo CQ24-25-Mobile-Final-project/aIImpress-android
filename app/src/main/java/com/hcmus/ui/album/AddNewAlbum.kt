@@ -29,7 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.galleryapp.ui.components.MyTopAppBar
+import com.hcmus.ui.components.MyTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

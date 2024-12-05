@@ -1,28 +1,27 @@
 package com.hcmus.ui.album
 
+import android.Manifest
+import android.content.ContentUris
+import android.content.Context
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
@@ -30,144 +29,173 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.example.galleryapp.ui.components.MyTopAppBar
+import com.hcmus.ui.components.MyTopAppBar
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.hcmus.R
+import coil.compose.rememberAsyncImagePainter
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectImageForAlbum(navController: NavController) {
-    val photos = listOf(
-        R.drawable.wallpaper, R.drawable.photo2, R.drawable.photo3
-    )
-    val selectedPhotos = remember { mutableStateListOf<Int>() }
+
+//        val photos = listOf(
+//            R.drawable.wallpaper, R.drawable.photo2, R.drawable.photo3
+//        )
+    val context = LocalContext.current
+    ImagePickerScreen(context = context)
+    val photos = remember { mutableStateOf<List<Uri>>(emptyList()) }
+    val selectedPhotos = remember { mutableStateListOf<Uri>() }
     val queryState = remember { mutableStateOf("") }
 
-    Scaffold (
-        topBar = {
-            MyTopAppBar(
-                title = "Add photos",
-                titleLeftButton = "Cancel",
-                onNavigationClick = { navController.popBackStack() },
-                onActionClick = { /* Handle action click */ },
-                actionIcon = Icons.Default.Done,
-                menuItems = listOf()
-            )
-        }
-    ) {
-        paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            SearchBar(
-                query = queryState.value,
-                onQueryChange = { newQuery -> queryState.value = newQuery },
-                onSearch = { /* Handle search */ },
-                active = false,
-                onActiveChange = { /* Handle active change */ },
-                modifier = Modifier.padding(16.dp)
-                    .fillMaxWidth(),
-                placeholder = {
-                    Text(text = "Search your photos", color = Color.Gray) // Text dưới dạng hint
-                },
-                leadingIcon = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(start = 16.dp)
-                    ) {
-                        Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
-                        Spacer(modifier = Modifier.width(4.dp))
-                    }
-                },
-            ) {
-                Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
-                Text(text ="Search")
+    RequestMediaPermissions {
+        photos.value = fetchImages(context) // Dynamically fetch images
+    }
+        Scaffold(
+            topBar = {
+                MyTopAppBar(
+                    title = "Add photos",
+                    titleLeftButton = "Cancel",
+                    onNavigationClick = { navController.popBackStack() },
+                    onActionClick = { /* Handle action click */ },
+                    actionIcon = Icons.Default.Done,
+                    menuItems = listOf()
+                )
             }
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(4),
+        ) { paddingValues ->
+            Column(
                 modifier = Modifier
-                    .fillMaxHeight(),
-                horizontalArrangement = Arrangement.spacedBy(2.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                    .fillMaxSize()
+                    .padding(paddingValues)
             ) {
-                items(3) { index ->
-                    val photoId = photos[index]
-                    val isSelected = selectedPhotos.contains(photoId)
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(4),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(2.dp)
+                ) {
+                    items(photos.value) { imageUri ->
+                        val isSelected = selectedPhotos.contains(imageUri)
 
-                    BoxWithConstraints(
-                        modifier = Modifier.fillMaxWidth()
-                            .fillMaxHeight() // Sử dụng toàn bộ không gian có sẵn
-                            .toggleable(
-                                value = isSelected,
-                                onValueChange = {
-                                    if (isSelected) {
-                                        selectedPhotos.remove(photoId)
-                                    } else {
-                                        selectedPhotos.add(photoId)
-                                    }
-                                }
-                            )
-                    ) {
-                        val screenWidth = maxWidth
-
-                        Image(
-                            painter = painterResource(id = R.drawable.wallpaper),
-                            contentDescription = null,
+                        Box(
                             modifier = Modifier
-                                .size(screenWidth * 1f)
-                        )
-
-                        if (isSelected) {
-                            Box (
-                                modifier = Modifier
-                                    .matchParentSize()
-                                    .background(Color.White.copy(alpha = 0.3f))
-                                    .clip(RoundedCornerShape(8.dp))
-                            ) {
+                                .aspectRatio(1f)
+                                .padding(2.dp)
+                                .toggleable(
+                                    value = isSelected,
+                                    onValueChange = {
+                                        if (isSelected) selectedPhotos.remove(imageUri)
+                                        else selectedPhotos.add(imageUri)
+                                    }
+                                )
+                        ) {
+                            Image(
+                                painter = rememberAsyncImagePainter(model = imageUri),
+                                contentDescription = "Loaded image: $imageUri",
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            if (isSelected) {
                                 Box(
                                     modifier = Modifier
-                                        .size(24.dp)
-                                        .border(
-                                            width = 2.dp, // Độ dày của viền
-                                            color = Color.White, // Màu sắc của viền
-                                            shape = CircleShape // Đảm bảo viền là hình tròn
-                                        )
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.CheckCircle,
-                                        contentDescription = "Selected",
-                                        tint = Color.Blue,
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-
-                                }
+                                        .matchParentSize()
+                                        .background(Color.Black.copy(alpha = 0.3f))
+                                )
                             }
                         }
                     }
                 }
             }
         }
-    }
-}
 
+}
 
 @Preview(showBackground = true)
 @Composable
 fun SelectImageForAlbumPreview() {
     val mockNavController = rememberNavController() // Mock NavController cho Preview
-    SelectImageForAlbum(navController = mockNavController)
+    SelectImageForAlbum(
+        navController = mockNavController
+    )
+}
+
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+fun RequestMediaPermissions(content: @Composable () -> Unit) {
+    val permissionState = rememberPermissionState(
+        permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+    )
+
+    LaunchedEffect(Unit) {
+        permissionState.launchPermissionRequest()
+    }
+
+    if (permissionState.status.isGranted) {
+        // Render the UI when permission is granted
+        content()
+    } else {
+        // Render a placeholder or an error message when permission is denied
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = "Permission required to access media.")
+        }
+    }
+}
+
+
+
+fun fetchImages(context: Context): List<Uri> {
+    val images = mutableListOf<Uri>()
+    val projection = arrayOf(MediaStore.Images.Media._ID)
+    val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
+
+    val queryUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+    context.contentResolver.query(queryUri, projection, null, null, sortOrder)?.use { cursor ->
+        val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+
+        while (cursor.moveToNext()) {
+            val id = cursor.getLong(idColumn)
+            val uri = ContentUris.withAppendedId(queryUri, id)
+            images.add(uri)
+        }
+    }
+    // Log the number of images and some URIs for debugging
+    Log.d("fetchImages", "Fetched ${images.size} images.")
+    images.take(5).forEach { Log.d("fetchImages", "Image URI: $it") }
+    return images
+}
+
+@Composable
+fun ImageGrid(images: List<Uri>) {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(3),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        items(images) { imageUri ->
+            Image(
+                painter = rememberAsyncImagePainter(imageUri),
+                contentDescription = null,
+                modifier = Modifier
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(8.dp))
+            )
+        }
+    }
 }
