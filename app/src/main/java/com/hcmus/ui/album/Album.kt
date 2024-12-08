@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -20,6 +19,8 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -37,6 +38,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,15 +52,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hcmus.ui.components.MyTopAppBar
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.hcmus.R
 
 @Composable
 fun MyAlbumScreen (navController: NavController) {
     var isGridView by remember { mutableStateOf(true) }
+    val albums = AlbumRepository.albums
+
+    // Log albums value whenever it changes
+    LaunchedEffect(albums) {
+        Log.d("AlbumsLog", "Albums content: $albums")
+    }
     Scaffold(
         topBar = {
             MyTopAppBar(
@@ -77,7 +82,7 @@ fun MyAlbumScreen (navController: NavController) {
             )
         }
     ) {
-        paddingValues ->
+            paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -102,7 +107,7 @@ fun MyAlbumScreen (navController: NavController) {
                     columns = GridCells.Fixed(2),
                     modifier = Modifier.wrapContentHeight()
                 ) {
-                    items(10) { // Giả sử bạn có 10 album
+                    items(albums) { (name, photos) ->
                         Box (
                             modifier = Modifier
                                 .fillMaxSize()
@@ -110,6 +115,7 @@ fun MyAlbumScreen (navController: NavController) {
                                 .clickable(
                                     onClick = {
                                         try {
+                                            AlbumRepository.addAlbumName(name)
                                             navController.navigate("DisplayPhotoInAlbum")
                                         } catch (e: Exception) {
                                             Log.e("Navigation Error", e.message.toString())
@@ -117,7 +123,7 @@ fun MyAlbumScreen (navController: NavController) {
                                     }
                                 )
                         ) {
-                            AlbumItemGridView()
+                            AlbumItemGridView(name, photos.size)
                         }
                     }
                 }
@@ -126,7 +132,7 @@ fun MyAlbumScreen (navController: NavController) {
                 LazyColumn (
                     modifier = Modifier.padding(0.dp, 8.dp, 4.dp, 8.dp)
                 ) {
-                    items(10) { // Giả sử bạn có 10 album
+                    items(albums) { (name, photo) ->
                         Box (
                             modifier = Modifier
                                 .fillMaxSize()
@@ -141,7 +147,7 @@ fun MyAlbumScreen (navController: NavController) {
                                     }
                                 )
                         ) {
-                            AlbumItemListView()
+                            AlbumItemListView(name, photo.size)
                         }
                     }
                 }
@@ -151,8 +157,8 @@ fun MyAlbumScreen (navController: NavController) {
 }
 
 @Composable
-fun AlbumItemListView() {
-    Row (verticalAlignment = Alignment.CenterVertically, // Căn giữa phần tử theo chiều dọc
+fun AlbumItemListView(albumName: String, photoCount: Int) {
+    Row (verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
             .padding(0.dp, 0.dp, 8.dp, 4.dp)) {
         Image(
@@ -166,12 +172,12 @@ fun AlbumItemListView() {
         Column (
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.CenterVertically), // Căn giữa theo chiều dọc trong Column
+                .align(Alignment.CenterVertically),
             verticalArrangement = Arrangement.Center,
         ) {
-            Text(text = "Album name",
+            Text(text = albumName,
                 style = MaterialTheme.typography.titleMedium)
-            Text(text = "1 photos",
+            Text(text = photoCount.toString() + if(photoCount == 1)  " photo" else " photos",
                 style = MaterialTheme.typography.bodySmall
             )
         }
@@ -179,14 +185,13 @@ fun AlbumItemListView() {
 }
 
 @Composable
-fun AlbumItemGridView() {
+fun AlbumItemGridView(albumName: String, photoCount: Int) {
     Column {
         BoxWithConstraints(
             modifier = Modifier.fillMaxWidth()
-                .wrapContentHeight()// Sử dụng toàn bộ không gian có sẵn
+                .wrapContentHeight()
         ) {
             val screenWidth = maxWidth
-            val screenHeight = maxHeight
 
             Image(
                 painter = painterResource(id = R.drawable.wallpaper),
@@ -202,9 +207,10 @@ fun AlbumItemGridView() {
                 .fillMaxWidth()
                 .padding(8.dp)
         ) {
-            Text(text = "Album name",
+            Text(text = albumName,
                 style = MaterialTheme.typography.titleMedium)
-            Text(text = "1 photos",
+
+            Text(text = photoCount.toString() + if(photoCount == 1)  " photo" else " photos",
                 style = MaterialTheme.typography.bodySmall
             )
         }
@@ -219,8 +225,8 @@ fun BottomSheetExample() {
 
     Button(
         onClick = { showBottomSheet = true },
-        colors = ButtonDefaults.buttonColors( // Thay đổi màu nền và màu chữ
-            containerColor = MaterialTheme.colorScheme.secondary, // Màu nền
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.secondary,
             contentColor = Color.Black // Màu chữ
         ),
         modifier = Modifier.padding(8.dp)
@@ -231,7 +237,7 @@ fun BottomSheetExample() {
 
     if (showBottomSheet) {
         ModalBottomSheet(
-            onDismissRequest = { showBottomSheet = false } // Đóng khi nhấn ra ngoài
+            onDismissRequest = { showBottomSheet = false }
         ) {
             Column(
                 modifier = Modifier
@@ -245,7 +251,6 @@ fun BottomSheetExample() {
                 )
                 Divider()
 
-                // Các mục trong Bottom Sheet
                 CustomTransparentButton(
                     text = "Last Modified",
                     onClick = {
@@ -279,7 +284,7 @@ fun CustomTransparentButton(text: String, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .background(Color.Transparent) // Nền trong suốt
+            .background(Color.Transparent)
             .padding(vertical = 12.dp),
         style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.primary)
     )
@@ -289,7 +294,6 @@ fun CustomTransparentButton(text: String, onClick: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun MyAlbumScreenPreview() {
-    val mockNavController = rememberNavController() // Mock NavController cho Preview
+    val mockNavController = rememberNavController()
     MyAlbumScreen(navController = mockNavController)
 }
-

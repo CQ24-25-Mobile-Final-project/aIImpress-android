@@ -17,13 +17,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Face
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuDefaults.textFieldColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,9 +34,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.hcmus.ui.components.MyTopAppBar
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddNewAlbum(navController: NavController) {
+    var albumName by remember{ mutableStateOf("") }
     Scaffold(
         topBar = {
             MyTopAppBar(
@@ -59,22 +62,22 @@ fun AddNewAlbum(navController: NavController) {
         ) {
             Spacer(modifier = Modifier.height(50.dp))
             TextField(
-                value = "",
-                onValueChange = { /* Handle text change */ },
+                value = albumName,
+                onValueChange = { albumName = it },
                 label = {
                     Text(
                         text ="Add a title",
-                        style = MaterialTheme.typography.titleLarge,
+                        style = typography.titleLarge,
                         color = Color.Gray
                     ) },
                 modifier = Modifier.fillMaxWidth()
                     .padding(8.dp)
                     .clip(RoundedCornerShape(12.dp)),
-                singleLine = true, // Ensure single-line input
-                colors = textFieldColors(
-                    focusedIndicatorColor = Color.Transparent, // No underline when focused
-                    unfocusedIndicatorColor = Color.Transparent, // No underline when not focused
-                )
+                singleLine = true,
+//                colors = textFieldColors(
+//                    focusedIndicatorColor = Color.Transparent, // No underline when focused
+//                    unfocusedIndicatorColor = Color.Transparent, // No underline when not focused
+//                )
             )
             Spacer(modifier = Modifier.height(250.dp))
             Column(
@@ -100,11 +103,11 @@ fun AddNewAlbum(navController: NavController) {
                     Column {
                         Text(
                             text = "Select people & pets",
-                            style = MaterialTheme.typography.titleLarge
+                            style = typography.titleLarge
                         )
                         Text(
                             text = "Create an auto-updating album",
-                            style = MaterialTheme.typography.titleSmall
+                            style = typography.titleSmall
                         )
                     }
                 }
@@ -115,8 +118,9 @@ fun AddNewAlbum(navController: NavController) {
                         .clip(RoundedCornerShape(16.dp))
                         .background(MaterialTheme.colorScheme.primaryContainer)
                         .height(90.dp)
-                        .clickable { // Xử lý sự kiện click
+                        .clickable {
                             try {
+                                AlbumRepository.addAlbumName(albumName)
                                 navController.navigate("SelectImageForAlbum")
                             } catch (e: Exception) {
                                 Log.e("Navigation Error", e.message.toString())
@@ -134,7 +138,7 @@ fun AddNewAlbum(navController: NavController) {
                     Column {
                         Text(
                             text = "Select photo",
-                            style = MaterialTheme.typography.titleLarge
+                            style = typography.titleLarge
                         )
                     }
                 }

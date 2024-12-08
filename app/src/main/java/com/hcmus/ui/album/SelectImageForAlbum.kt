@@ -9,6 +9,7 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -33,95 +34,126 @@ import androidx.compose.ui.unit.dp
 import com.hcmus.ui.components.MyTopAppBar
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.gson.Gson
 
 @Composable
 fun SelectImageForAlbum(navController: NavController) {
 
-//        val photos = listOf(
-//            R.drawable.wallpaper, R.drawable.photo2, R.drawable.photo3
-//        )
     val context = LocalContext.current
     ImagePickerScreen(context = context)
     val photos = remember { mutableStateOf<List<Uri>>(emptyList()) }
     val selectedPhotos = remember { mutableStateListOf<Uri>() }
-    val queryState = remember { mutableStateOf("") }
+    val albumName = remember { AlbumRepository.albumName }
 
     RequestMediaPermissions {
         photos.value = fetchImages(context) // Dynamically fetch images
     }
-        Scaffold(
-            topBar = {
-                MyTopAppBar(
-                    title = "Add photos",
-                    titleLeftButton = "Cancel",
-                    onNavigationClick = { navController.popBackStack() },
-                    onActionClick = { /* Handle action click */ },
-                    actionIcon = Icons.Default.Done,
-                    menuItems = listOf()
-                )
-            }
-        ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(4),
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(2.dp)
-                ) {
-                    items(photos.value) { imageUri ->
-                        val isSelected = selectedPhotos.contains(imageUri)
 
-                        Box(
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .padding(2.dp)
-                                .toggleable(
-                                    value = isSelected,
-                                    onValueChange = {
-                                        if (isSelected) selectedPhotos.remove(imageUri)
-                                        else selectedPhotos.add(imageUri)
-                                    }
-                                )
-                        ) {
-                            Image(
-                                painter = rememberAsyncImagePainter(model = imageUri),
-                                contentDescription = "Loaded image: $imageUri",
-                                modifier = Modifier.fillMaxWidth()
+    Scaffold(
+        topBar = {
+            MyTopAppBar(
+                title = "Add photos",
+                titleLeftButton = "Cancel",
+                onNavigationClick = { navController.popBackStack() },
+                onActionClick = {
+                    Log.d("AlbumsLog", "Albums content: $selectedPhotos")
+                    var exitedAlbum = AlbumRepository.albums.find { it.first == albumName}
+                    if (exitedAlbum == null) {
+                        AlbumRepository.addAlbum(AlbumRepository.albumName, selectedPhotos)
+                    }
+                    else {
+                        AlbumRepository.insertIntoAlbum(albumName, selectedPhotos)
+                    }
+                    navController.navigate("MyAlbumScreen")
+                },
+                actionIcon = Icons.Default.Done,
+                menuItems = listOf()
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(4),
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                items(photos.value) { imageUri ->
+                    val isSelected = selectedPhotos.contains(imageUri)
+
+                    Box(
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .toggleable(
+                                value = isSelected,
+                                onValueChange = {
+                                    if (isSelected) selectedPhotos.remove(imageUri)
+                                    else selectedPhotos.add(imageUri)
+                                }
                             )
-                            if (isSelected) {
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter(model = imageUri),
+                            contentDescription = "Loaded image: $imageUri",
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        if (isSelected) {
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .background(Color.Black.copy(alpha = 0.3f))
+                            ) {
                                 Box(
                                     modifier = Modifier
-                                        .matchParentSize()
-                                        .background(Color.Black.copy(alpha = 0.3f))
-                                )
+                                        .size(24.dp)
+                                        .border(
+                                            width = 2.dp,
+                                            color = Color.White,
+                                            shape = CircleShape
+                                        )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = "Selected",
+                                        tint = Color.Blue,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
         }
-
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun SelectImageForAlbumPreview() {
-    val mockNavController = rememberNavController() // Mock NavController cho Preview
+    val mockNavController = rememberNavController()
     SelectImageForAlbum(
         navController = mockNavController
     )

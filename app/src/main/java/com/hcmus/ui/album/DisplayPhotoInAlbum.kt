@@ -1,5 +1,7 @@
 package com.hcmus.ui.album
 
+import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,7 +33,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -38,11 +41,9 @@ import androidx.compose.material3.TextField
 import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -54,21 +55,24 @@ import androidx.compose.ui.window.Popup
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.hcmus.ui.components.MyTopAppBar
-import com.hcmus.R
 import com.hcmus.ui.theme.MyApplicationTheme
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DisplayPhotoInAlbum(navController: NavController) {
-    val photos = listOf(R.drawable.wallpaper, R.drawable.photo2, R.drawable.photo3)
-    val selectedPhotos = remember { mutableStateListOf<Int>() }
+    val selectedPhotos = remember { mutableStateListOf<Uri>() }
     val isSelectedDropdownOption = remember { mutableStateOf(false) }
     val showDeletePopup = remember { mutableStateOf(false) }
     val isDeleteAlbumDropdownOption = remember { mutableStateOf(false) }
     val isRenameAlbumDropdownOption = remember { mutableStateOf(false) }
-    var albumName by remember { mutableStateOf("Album name") }
+    var albumName = remember { AlbumRepository.albumName }
+    val photos = remember {
+        AlbumRepository.albums.find { it.first == albumName }?.second ?: emptyList()
+    }
 
     Scaffold (
         topBar = {
@@ -82,7 +86,6 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                     "Select" to {isSelectedDropdownOption.value = true},
                     "Rename" to {isRenameAlbumDropdownOption.value = true},
                     "Delete Album" to {isDeleteAlbumDropdownOption.value = true}
-
                 )
             )
         },
@@ -150,9 +153,9 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                                     selectedPhotos.addAll(photos)
                                 }
                             },
-                            colors = ButtonDefaults.buttonColors( // Thay đổi màu nền và màu chữ
-                                containerColor = MaterialTheme.colorScheme.primary, // Màu nền
-                                contentColor = Color.Black // Màu chữ
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = Color.Black
                             ),
                             modifier = Modifier.padding(start = 16.dp)
                         ) {
@@ -169,9 +172,9 @@ fun DisplayPhotoInAlbum(navController: NavController) {
 
                         Button(
                             onClick = { isSelectedDropdownOption.value = !isSelectedDropdownOption.value },
-                            colors = ButtonDefaults.buttonColors( // Thay đổi màu nền và màu chữ
-                                containerColor = MaterialTheme.colorScheme.primary, // Màu nền
-                                contentColor = Color.Black // Màu chữ
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = Color.Black
                             ),
                             modifier = Modifier.padding(start = 16.dp)
                         ) {
@@ -183,9 +186,9 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                     else {
                         Button(
                             onClick = { navController.navigate("SelectImageForAlbum") },
-                            colors = ButtonDefaults.buttonColors( // Thay đổi màu nền và màu chữ
-                                containerColor = MaterialTheme.colorScheme.primary, // Màu nền
-                                contentColor = Color.Black // Màu chữ
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = Color.Black
                             ),
                             modifier = Modifier.padding(start = 16.dp)
                         ) {
@@ -193,7 +196,10 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Icon(imageVector = Icons.Default.Add, contentDescription = null)
-                                Text( text ="Add photos" )
+                                Text( text ="Add photos" ,
+                                    color = Color.White
+                                )
+
                             }
                         }
                     }
@@ -203,62 +209,50 @@ fun DisplayPhotoInAlbum(navController: NavController) {
 
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(4),
-                    modifier = Modifier
-                        .fillMaxHeight(),
+                    modifier = Modifier.fillMaxHeight(),
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    items(40) { index ->
-                        val photoId = photos[0]
-                        val isSelected = selectedPhotos.contains(photoId)
+                    items(photos) { imageUri ->
+                        val isSelected = selectedPhotos.contains(imageUri)
 
-                        BoxWithConstraints(
+                        Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .fillMaxHeight() // Sử dụng toàn bộ không gian có sẵn
+                                .aspectRatio(1f)
                                 .toggleable(
                                     value = isSelected,
                                     onValueChange = {
-                                        if (isSelected) {
-                                            selectedPhotos.remove(photoId)
-                                        } else {
-                                            selectedPhotos.add(photoId)
-                                        }
+                                        if (isSelected) selectedPhotos.remove(imageUri)
+                                        else selectedPhotos.add(imageUri)
                                     }
                                 )
                         ) {
-                            val screenWidth = maxWidth
-
                             Image(
-                                painter = painterResource(id = photoId),
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .size(screenWidth * 1f)
+                                painter = rememberAsyncImagePainter(model = imageUri),
+                                contentDescription = "Loaded image: $imageUri",
+                                modifier = Modifier.fillMaxWidth()
                             )
-                            if (isSelectedDropdownOption.value) {
-                                if (isSelected) {
-                                    Box (
+                            if (isSelected) {
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .background(Color.Black.copy(alpha = 0.3f))
+                                ) {
+                                    Box(
                                         modifier = Modifier
-                                            .matchParentSize()
-                                            .background(Color.White.copy(alpha = 0.3f))
-                                            .clip(RoundedCornerShape(8.dp))
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(24.dp)
-                                                .border(
-                                                    width = 2.dp, // Độ dày của viền
-                                                    color = Color.White, // Màu sắc của viền
-                                                    shape = CircleShape // Đảm bảo viền là hình tròn
-                                                )
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.CheckCircle,
-                                                contentDescription = "Selected",
-                                                tint = Color.Blue,
-                                                modifier = Modifier.fillMaxSize()
+                                            .size(24.dp)
+                                            .border(
+                                                width = 2.dp,
+                                                color = Color.White,
+                                                shape = CircleShape
                                             )
-                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.CheckCircle,
+                                            contentDescription = "Selected",
+                                            tint = Color.Blue,
+                                            modifier = Modifier.fillMaxSize()
+                                        )
                                     }
                                 }
                             }
@@ -269,10 +263,6 @@ fun DisplayPhotoInAlbum(navController: NavController) {
         }
         if (isSelectedDropdownOption.value) {
             FloatingButtonExample(Icons.Default.Delete, "Delete", showDeletePopup)
-        }
-
-        if(isRenameAlbumDropdownOption.value) {
-
         }
 
         if(isDeleteAlbumDropdownOption.value) {
@@ -313,7 +303,12 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                                     Text(text = "Cancel")
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Button(onClick = { }) {
+                                Button(onClick = {
+                                    AlbumRepository.deleteAlbum(albumName)
+                                    isDeleteAlbumDropdownOption.value = false
+                                    showDeletePopup.value = false
+                                    navController.navigate("MyAlbumScreen")
+                                }) {
                                     Text(
                                         text = "Delete",
                                         fontWeight = FontWeight.Bold
@@ -334,12 +329,11 @@ fun FloatingButtonExample(icon: ImageVector, iconName: String, showDeletePopup: 
         modifier = Modifier
             .fillMaxSize()
     ) {
-        // Nút nổi cố định phía dưới
         FloatingActionButton(
             onClick = { showDeletePopup.value = true },
             modifier = Modifier
-                .align(Alignment.BottomEnd) // Cố định ở góc phải dưới
-                .padding( 16.dp ) // Khoảng cách từ cạnh màn hình
+                .align(Alignment.BottomEnd)
+                .padding( 16.dp )
                 .fillMaxWidth(),
             containerColor = MaterialTheme.colorScheme.primary
         ) {
@@ -400,8 +394,8 @@ fun FloatingButtonExample(icon: ImageVector, iconName: String, showDeletePopup: 
 @Preview(showBackground = true)
 @Composable
 fun DisplayPhotoInAlbumPreview() {
-    val mockNavController = rememberNavController() // Mock NavController cho Preview
-    MyApplicationTheme { // Thêm theme của bạn ở đây
+    val mockNavController = rememberNavController()
+    MyApplicationTheme {
         DisplayPhotoInAlbum(navController = mockNavController)
     }
 }
