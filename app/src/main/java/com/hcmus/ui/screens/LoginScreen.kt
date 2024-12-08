@@ -1,4 +1,4 @@
-package com.hcmus.ui.aiimpress
+package com.hcmus.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,8 +35,6 @@ val btnColor = ButtonColors(
 
 @Composable
 fun LoginScreen(onLoginSuccess: () -> Unit) {
-
-
   Column(
     modifier = Modifier
       .fillMaxSize()
@@ -46,20 +45,22 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
 
     Spacer(modifier = Modifier.height(24.dp))
 
+    // TODO: field email + password
+
     // App Logo and Tagline
     Column(
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
       Text(
         text = "WALPER",
-        style = androidx.compose.ui.text.TextStyle(
+        style = TextStyle(
           color = Color(0xFF6633FF), // Adjusted to match the logo color
           fontSize = 28.sp
         )
       )
       Text(
         text = "Only Wallpaper app you will ever need ...!",
-        style = androidx.compose.ui.text.TextStyle(
+        style = TextStyle(
           color = Color.Gray,
           fontSize = 14.sp
         ),
@@ -95,14 +96,13 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
       SignInButton(
         text = "Continue With Facebook",
         color = Color(0xFF4267B2),
-        icon =  Icons.Default.AccountBox, // Add your Facebook icon
+        icon =  Icons.Default.AccountBox,
         onClick = {}
       )
     }
 
     Spacer(modifier = Modifier.height(16.dp))
 
-    // Sign-In Link
     Text(
       text = "Already Have An Account? Sign In",
       color = Color(0xFF8E80F5),
