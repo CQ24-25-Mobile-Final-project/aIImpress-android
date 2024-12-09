@@ -84,7 +84,9 @@ dependencies {
     val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)
     androidTestImplementation(composeBom)
-
+    implementation("com.google.accompanist:accompanist-permissions:0.36.0")
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("com.google.code.gson:gson:2.11.0")
     // Core Android dependencies
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

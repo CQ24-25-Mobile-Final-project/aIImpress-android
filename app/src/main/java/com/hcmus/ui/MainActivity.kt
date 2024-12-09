@@ -19,25 +19,70 @@ package com.hcmus.ui
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.hcmus.ui.album.AddNewAlbum
+import com.hcmus.ui.album.DisplayPhotoInAlbum
+import com.hcmus.ui.album.ImagePickerScreen
+import com.hcmus.ui.album.MyAlbumScreen
+import com.hcmus.ui.album.SelectImageForAlbum
 import dagger.hilt.android.AndroidEntryPoint
 import com.hcmus.ui.theme.MyApplicationTheme
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContent {
-            MyApplicationTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    MainNavigation()
+            MyApplicationTheme(dynamicColor = false) {
+                val navController = rememberNavController()
+                Scaffold(
+                    topBar = {
+
+                    }
+                ) {paddingValues ->
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                    ) {
+                        NavHost(
+                            navController = navController,
+                            startDestination = "MyAlbumScreen" // Màn hình bắt đầu
+                        ) {
+                            composable("MyAlbumScreen") {
+                                MyAlbumScreen(navController = navController) // Truyền NavController
+                            }
+                            // AddNewAlbum screen
+                            composable("AddNewAlbum") {
+                                AddNewAlbum(navController = navController) // Truyền NavController
+                            }
+
+                            composable("SelectImageForAlbum") {
+                                SelectImageForAlbum(navController = navController)
+                            }
+
+                            composable("DisplayPhotoInAlbum") {
+                                DisplayPhotoInAlbum(navController = navController)
+                            }
+
+                            composable("imagePicker") {
+                                val context = LocalContext.current
+                                ImagePickerScreen(context = context)
+                            }
+                        }
+                    }
                 }
             }
         }
