@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "com.hcmus"
+rootProject.name = "AIImpress"
 include(":app")
  
