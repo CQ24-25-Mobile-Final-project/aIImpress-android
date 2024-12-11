@@ -137,6 +137,11 @@ dependencies {
     implementation(libs.serializable)
     implementation(libs.retrofit.kotlin.serialization)
 
+    implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("com.google.accompanist:accompanist-insets:0.28.0")
+    implementation("com.vanniktech:android-image-cropper:4.5.0")
+    implementation("io.coil-kt:coil-compose:2.3.0")
+
 //    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
 //    implementation("com.google.firebase:firebase-auth")
 //    implementation("com.firebaseui:firebase-ui-auth:7.2.0")
