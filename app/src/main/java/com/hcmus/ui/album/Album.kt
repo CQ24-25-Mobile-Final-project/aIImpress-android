@@ -1,5 +1,6 @@
 package com.hcmus.ui.album
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -184,6 +185,7 @@ fun AlbumItemListView(albumName: String, photoCount: Int) {
     }
 }
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun AlbumItemGridView(albumName: String, photoCount: Int) {
     Column {
@@ -191,13 +193,11 @@ fun AlbumItemGridView(albumName: String, photoCount: Int) {
             modifier = Modifier.fillMaxWidth()
                 .wrapContentHeight()
         ) {
-            val screenWidth = maxWidth
-
             Image(
                 painter = painterResource(id = R.drawable.wallpaper),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(screenWidth * 1f)
+                    .size(maxWidth * 1f)
                     .clip(RoundedCornerShape(16.dp))
             )
         }
