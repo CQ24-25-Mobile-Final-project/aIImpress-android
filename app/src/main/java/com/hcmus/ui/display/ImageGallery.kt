@@ -5,47 +5,15 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-
-
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,30 +23,29 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.insets.LocalWindowInsets
 import com.hcmus.R
-import androidx.compose.foundation.layout.* // Make sure this import exists
 import com.hcmus.ui.components.CustomBottomBar
 import com.hcmus.ui.components.GalleryTopBar
-
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PhotoGalleryScreen(navController: NavController) {
     var isFilterActive by remember { mutableStateOf(false) }
-    var selectedIndex by remember { mutableStateOf(0) }
     var searchQuery by remember { mutableStateOf("") }
-
     val context = LocalContext.current
+
+    // Assuming MediaReader is a custom class for accessing media files
     val mediaReader = remember { MediaReader(context) }
     val photosByDate = remember { mediaReader.getAllMediaFiles() }
-    val insets = LocalWindowInsets.current
-    val bottomInset = with(LocalDensity.current) { insets.navigationBars.bottom.toDp() }
+    val categorizedPhotos = categorizePhotos(photosByDate)
+    val storyItems = getStoryItemsFromPhotos(categorizedPhotos)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -88,18 +55,21 @@ fun PhotoGalleryScreen(navController: NavController) {
                 bottom = with(LocalDensity.current) { LocalWindowInsets.current.navigationBars.bottom.toDp() }
             )
     ) {
-        // Top Bar
         GalleryTopBar()
 
-        // Search or Filter Bar
+
         SearchOrFilterBar(
             isFilterActive = isFilterActive,
             searchQuery = searchQuery,
             onSearchQueryChange = { searchQuery = it },
             onFilterToggle = { isFilterActive = !isFilterActive }
         )
+        val storyItems = getStoryItemsFromPhotos(categorizedPhotos)
 
-        // Photo List
+        StoryItemView(storyItems, navController)
+
+
+        // Displaying the photo gallery
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
@@ -108,8 +78,7 @@ fun PhotoGalleryScreen(navController: NavController) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            photosByDate.forEach { (date, photos) ->
-                // Hiển thị tiêu đề ngày
+            categorizedPhotos.forEach { (date, photos) ->
                 item {
                     Text(
                         text = date,
@@ -118,19 +87,16 @@ fun PhotoGalleryScreen(navController: NavController) {
                     )
                 }
 
-                // Nhóm ảnh theo hàng (3 ảnh/hàng)
                 items(photos.chunked(3)) { rowPhotos ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(2.dp),
-
-                        ) {
+                    ) {
                         rowPhotos.forEach { photo ->
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
                                     .aspectRatio(1f)
-
                                     .background(Color.White)
                                     .clickable {
                                         navController.navigate("imageDetail/${Uri.encode(photo.uri.toString())}")
@@ -144,7 +110,6 @@ fun PhotoGalleryScreen(navController: NavController) {
                                 )
                             }
                         }
-                        // Thêm ô trống nếu số ảnh không đủ 3 trong hàng
                         repeat(3 - rowPhotos.size) {
                             Spacer(modifier = Modifier.weight(1f))
                         }
@@ -153,17 +118,10 @@ fun PhotoGalleryScreen(navController: NavController) {
             }
         }
 
-        // Bottom Navigation Bar
         CustomBottomBar(
-            selectedIndex = selectedIndex,
-            onTabSelected = { index ->
-                selectedIndex = index
-                if (index == 3) navController.navigate("shareScreen")
-                if (index == 0) navController.navigate("gallery")
-            },
-            onAddClick = {
-                navController.navigate("appContent")
-            },
+            selectedIndex = 0,
+            onTabSelected = { index -> },
+            onAddClick = { navController.navigate("appContent") },
             navController = navController
         )
     }
@@ -243,119 +201,106 @@ fun SearchOrFilterBar(
         }
     }
 }
-
 @Composable
-fun PhotoThumbnail(photoUri: Uri, navController: NavController) {
-    Box(
-        modifier = Modifier
-
-            .aspectRatio(1f)
-            .background(Color.White)
-            .clickable {
-                navController.navigate("imageDetail/${Uri.encode(photoUri.toString())}")
-            }
+fun StoryItemView(stories: List<StoryItem>, navController: NavController) {
+    LazyRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp), // Increase space between items
+        contentPadding = PaddingValues(start = 8.dp, end = 8.dp)
     ) {
-        Image(
-            painter = rememberAsyncImagePainter(photoUri),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
+        items(stories) { story ->
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.clickable {
+                    navController.navigate("storyUI/${story.label}")
+                }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(65.dp) // This will be the circular box
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.background)
+                        .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = rememberAsyncImagePainter(story.imageUri),
+                        contentDescription = story.label,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.size(55.dp).clip(CircleShape)
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Ensure the text is centered and truncated with ellipsis if too long
+                Text(
+                    text = story.label,
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1, // Ensure single line of text
+                    overflow = TextOverflow.Ellipsis, // Truncate with ellipsis if text is too long
+                    modifier = Modifier
+                        .width(70.dp) // Ensure text width matches the circle
+                        .padding(horizontal = 4.dp) // Padding to prevent touching the edges
+                )
+            }
+        }
     }
 }
 
-// The remaining composables (CustomBottomBar, BottomBarItem, GalleryTopBar, etc.) remain unchanged.
+
+data class Photo(
+    val uri: Uri,
+    val date: Date,
+    val label: String,
+)
+
+
 
 data class StoryItem(
-    val imageRes: Int,
+    val imageUri: Uri,
     val label: String
 )
-@Composable
-fun StoryItemView(story: StoryItem, onClick: () -> Unit) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable(onClick = onClick)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(65.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.background)
-                .border(2.dp, MaterialTheme.colorScheme.secondary, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(id = story.imageRes),
-                contentDescription = story.label,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.size(55.dp).clip(CircleShape)
-            )
+
+// Function to categorize photos based on date
+fun categorizePhotos(photos: Map<String, List<MediaFile>>): Map<String, List<Photo>> {
+    val categorizedPhotos = mutableMapOf<String, MutableList<Photo>>()
+    val calendar = Calendar.getInstance()
+    val currentDate = calendar.time
+
+    // Categorizing photos based on the number of days ago
+    photos.forEach { (date, mediaFiles) ->
+        mediaFiles.forEach { mediaFile ->
+            val photoDate = Date(mediaFile.dateAdded * 1000L) // Convert timestamp to Date
+            val diffInMillis = currentDate.time - photoDate.time
+            val diffInDays = diffInMillis / (1000 * 60 * 60 * 24)
+
+            // Categorizing by the number of days ago
+            val category = when {
+                diffInDays < 1 -> "Hôm nay" // Today
+                diffInDays < 2 -> "Hôm qua" // Yesterday
+                diffInDays < 7 -> "Vài ngày trước" // A few days ago
+                diffInDays < 30 -> "Vài tuần trước" // A few weeks ago
+                diffInDays < 365 -> "Vài tháng trước" // A few months ago
+                else -> "Vài năm trước" // A few years ago
+            }
+
+            // Add the photo to the categorized list
+            categorizedPhotos.computeIfAbsent(category) { mutableListOf() }
+                .add(Photo(uri = mediaFile.uri, date = photoDate, label =category))
         }
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = story.label,
-            color = MaterialTheme.colorScheme.secondary,
-            style = MaterialTheme.typography.bodySmall,
-            textAlign = TextAlign.Center
-        )
     }
+
+    return categorizedPhotos
 }
 
-
-
-
-
-
-
-@Composable
-fun PhotoCard(photoRes: Int, onClick: () -> Unit) {
-    Card(
-        shape = MaterialTheme.shapes.medium,
-        modifier = Modifier
-            .padding(8.dp)
-            .size(150.dp)
-            .clickable(onClick = onClick) // Handle click event
-    ) {
-        Image(
-            painter = painterResource(id = photoRes),
-            contentDescription = "Photo",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
+// Function to create story items from categorized photos
+fun getStoryItemsFromPhotos(categorizedPhotos: Map<String, List<Photo>>): List<StoryItem> {
+    return categorizedPhotos.mapNotNull { (category, photos) ->
+        val photo = photos.firstOrNull() // Choose the first photo in the category (or apply your logic)
+        photo?.let {
+            StoryItem(imageUri = it.uri, label = category) // Create a StoryItem with the first photo of the category
+        }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewPhotoGalleryScreen() {
-    val navController = rememberNavController()
-
-    // Mock data for the preview
-    val mockPhotos = listOf(
-        Photo("2024-12-14", listOf(
-            PhotoItem(Uri.parse("https://www.example.com/photo1.jpg")),
-            PhotoItem(Uri.parse("https://www.example.com/photo2.jpg")),
-            PhotoItem(Uri.parse("https://www.example.com/photo3.jpg"))
-        )),
-        Photo("2024-12-13", listOf(
-            PhotoItem(Uri.parse("https://www.example.com/photo4.jpg")),
-            PhotoItem(Uri.parse("https://www.example.com/photo5.jpg")),
-            PhotoItem(Uri.parse("https://www.example.com/photo6.jpg"))
-        ))
-    )
-
-    // Mocking the data source
-    val mediaReader = remember { MockMediaReader(mockPhotos) }
-
-    // Using the gallery screen with mock data
-    PhotoGalleryScreen(navController = navController)
-}
-
-// Mock data classes to simulate photos
-data class PhotoItem(val uri: Uri)
-data class Photo(val date: String, val photos: List<PhotoItem>)
-
-// Mock MediaReader to return the mock photos
-class MockMediaReader(private val photos: List<Photo>) {
-    fun getAllMediaFiles(): List<Photo> = photos
 }

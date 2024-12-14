@@ -156,6 +156,7 @@ dependencies {
     implementation ("androidx.compose.material3:material3:1.0.0")
     implementation ("androidx.compose.ui:ui-text-google-fonts:1.5.0")
     implementation ("androidx.compose.material:material-icons-extended:1.4.0")
-
+    implementation ("com.google.accompanist:accompanist-insets:0.23.1")
     implementation ("androidx.compose.material:material-icons-core:1.4.0")
+
 }
