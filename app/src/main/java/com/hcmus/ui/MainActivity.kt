@@ -23,7 +23,6 @@ import com.hcmus.ui.story.SharedGalleryScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
 import com.hcmus.ui.theme.MyApplicationTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -56,7 +55,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainNavigation(navController: NavHostController) {
     NavHost(navController = navController, startDestination = "login") {
-
         composable("login") {
             LoginScreen(onLoginSuccess = {
                 navController.navigate("gallery") {
