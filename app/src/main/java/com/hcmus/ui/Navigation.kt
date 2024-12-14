@@ -32,11 +32,21 @@ import com.hcmus.ui.display.AppContent
 import com.hcmus.ui.display.EditImageScreen
 import com.hcmus.ui.display.ImageDetailScreen
 import com.hcmus.ui.display.PhotoGalleryScreen
+import com.hcmus.ui.secret.AuthenticationScreen
+import com.hcmus.ui.secret.SecretPhotoViewScreen
 import com.hcmus.ui.story.SharedGalleryScreen
 @Composable
 fun MainNavigation(navController: NavHostController) {
     NavHost(navController = navController, startDestination = "gallery") {
         composable("gallery") { PhotoGalleryScreen(navController) }
+        composable("authentication") { AuthenticationScreen(navController) }
+        composable("view") { SecretPhotoViewScreen(
+            onBackPressed = {
+                navController.navigate("main") {
+                    popUpTo("main") { inclusive = true }// dùng để xóa các màn hình trung gian
+                }
+            }
+        ) }
         composable(
             route = "imageDetail/{photoUri}",
             arguments = listOf(navArgument("photoUri") {

@@ -68,9 +68,11 @@ fun CustomBottomBar(
             BottomBarItem(
                 isSelected = selectedIndex == 2,
                 iconRes = R.drawable.privacy_icon,
-                contentDescription = "Share",
+                contentDescription = "Privacy",
                 onClick = {
+
                     onTabSelected(2)
+                    navController.navigate("authentication")
                 }
             )
             BottomBarItem(
