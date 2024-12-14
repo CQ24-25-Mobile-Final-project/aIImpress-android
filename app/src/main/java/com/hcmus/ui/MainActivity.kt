@@ -1,5 +1,7 @@
 package com.hcmus.ui
 
+import android.Manifest
+import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
@@ -28,6 +30,8 @@ import com.hcmus.ui.theme.MyApplicationTheme
 import dagger.hilt.android.AndroidEntryPoint
 import android.view.View
 import android.view.ViewTreeObserver
+import androidx.activity.enableEdgeToEdge
+import androidx.core.app.ActivityCompat
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -42,6 +46,14 @@ class MainActivity : ComponentActivity() {
             }
         )
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        
+        val permissions = if (Build.VERSION.SDK_INT >= 33) {
+            arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
+        } else {
+            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
+        ActivityCompat.requestPermissions(this, permissions, 0)
 
         setContent {
             MyApplicationTheme {

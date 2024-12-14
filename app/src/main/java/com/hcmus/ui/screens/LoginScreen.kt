@@ -4,22 +4,31 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,8 +54,6 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
 
     Spacer(modifier = Modifier.height(24.dp))
 
-    // TODO: field email + password
-
     // App Logo and Tagline
     Column(
       horizontalAlignment = Alignment.CenterHorizontally
@@ -54,7 +61,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
       Text(
         text = "WALPER",
         style = TextStyle(
-          color = Color(0xFF6633FF), // Adjusted to match the logo color
+          color = BluePrimary, // Adjusted to match the logo color
           fontSize = 28.sp
         )
       )
@@ -77,9 +84,9 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
     ) {
       SignInButton(
         text = "Continue With Email",
-        color = Color(0xFF8E80F5),
+        color = BluePrimary,
         icon = Icons.Default.AccountBox,
-        onClick = {}
+        onClick = onLoginSuccess
       )
 
       Spacer(modifier = Modifier.height(16.dp))
@@ -88,7 +95,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
         text = "Continue With Google",
         color = Color.White,
         icon = Icons.Default.AccountBox,
-        onClick = {}
+        onClick = onLoginSuccess
       )
 
       Spacer(modifier = Modifier.height(16.dp))
@@ -96,8 +103,8 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
       SignInButton(
         text = "Continue With Facebook",
         color = Color(0xFF4267B2),
-        icon =  Icons.Default.AccountBox,
-        onClick = {}
+        icon = Icons.Default.AccountBox,
+        onClick = onLoginSuccess
       )
     }
 
@@ -105,7 +112,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
 
     Text(
       text = "Already Have An Account? Sign In",
-      color = Color(0xFF8E80F5),
+      color = BluePrimary,
       modifier = Modifier.padding(top = 16.dp)
     )
   }
@@ -143,8 +150,6 @@ fun SignInButton(
 @Preview(showBackground = true)
 @Composable
 private fun DefaultPreview() {
-  var onLoginSuccess: () -> Unit = {}
-
   MyApplicationTheme {
     LoginScreen { }
   }
