@@ -31,7 +31,8 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.ViewCompat
-import com.example.photoapp.ui.theme.AppTypography
+import com.hcmus.ui.components.AppTypography
+
 
 private val DarkColorScheme = darkColorScheme(
     primary = BluePrimary,

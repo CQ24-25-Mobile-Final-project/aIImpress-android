@@ -57,6 +57,7 @@ import androidx.navigation.compose.rememberNavController
 import com.hcmus.R
 import com.hcmus.ui.components.CustomBottomBar
 import com.hcmus.ui.components.GalleryTopBar
+import com.hcmus.ui.components.MyTopAppBar
 
 
 @Composable
@@ -71,6 +72,20 @@ fun MyAlbumScreen(navController: NavController) {
     Scaffold(
         topBar = {
             GalleryTopBar()
+            MyTopAppBar(
+                title = "Albums",
+                titleLeftButton = "Back",
+                onNavigationClick = { /* Handle navigation click */ },
+                onActionClick = {
+                    try {
+                        navController.navigate("AddNewAlbum")
+                    } catch (e: Exception) {
+                        Log.e("Navigation Error", e.message.toString())
+                    }
+                },
+                actionIcon = Icons.Default.Add,
+                menuItems = listOf()
+            )
         },
         bottomBar = {
             var selectedIndex = 1

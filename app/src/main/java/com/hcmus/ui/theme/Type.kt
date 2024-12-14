@@ -1,4 +1,5 @@
-package com.example.photoapp.ui.theme
+package com.hcmus.ui.components
+
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

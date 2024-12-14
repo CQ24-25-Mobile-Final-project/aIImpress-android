@@ -44,7 +44,8 @@ import com.canhub.cropper.CropImage.CancelledResult.bitmap
 import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
 import com.canhub.cropper.CropImageOptions
-import com.example.photoapp.ui.theme.fontFamily
+import com.hcmus.ui.components.fontFamily
+
 
 import java.io.File
 import java.io.FileOutputStream

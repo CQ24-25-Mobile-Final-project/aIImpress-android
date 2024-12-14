@@ -33,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.hcmus.ui.components.GalleryTopBar
+import com.hcmus.ui.components.MyTopAppBar
 
 
 @Composable
@@ -41,6 +42,18 @@ fun AddNewAlbum(navController: NavController) {
     Scaffold(
         topBar = {
             GalleryTopBar()
+            MyTopAppBar(
+                title = "",
+                titleLeftButton = "Albums",
+                onNavigationClick = {
+                    navController.navigate("MyAlbumScreen") {
+                        popUpTo("MyAlbumScreen") { inclusive = true } // Đảm bảo không bị thêm nhiều bản sao trong stack
+                    }
+                },
+                onActionClick = { /* Handle action click */ },
+                actionIcon = Icons.Default.Check,
+                menuItems = listOf()
+            )
         }
     ) {
         paddingValues ->

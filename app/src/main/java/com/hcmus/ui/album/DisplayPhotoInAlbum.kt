@@ -62,6 +62,7 @@ import androidx.compose.runtime.getValue
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.hcmus.ui.components.GalleryTopBar
+import com.hcmus.ui.components.MyTopAppBar
 
 @Composable
 fun DisplayPhotoInAlbum(navController: NavController) {
@@ -78,6 +79,18 @@ fun DisplayPhotoInAlbum(navController: NavController) {
     Scaffold (
         topBar = {
             GalleryTopBar()
+            MyTopAppBar(
+                title = "",
+                titleLeftButton = "Albums",
+                onNavigationClick = { navController.navigate("MyAlbumScreen") },
+                onActionClick = {},
+                actionIcon = Icons.Default.MoreVert,
+                menuItems = listOf(
+                    "Select" to {isSelectedDropdownOption.value = true},
+                    "Rename" to {isRenameAlbumDropdownOption.value = true},
+                    "Delete Album" to {isDeleteAlbumDropdownOption.value = true}
+                )
+            )
         },
 
     ) {

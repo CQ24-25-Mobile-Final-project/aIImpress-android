@@ -53,6 +53,7 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.gson.Gson
 import com.hcmus.ui.components.GalleryTopBar
+import com.hcmus.ui.components.MyTopAppBar
 
 @Composable
 fun SelectImageForAlbum(navController: NavController) {
@@ -70,6 +71,24 @@ fun SelectImageForAlbum(navController: NavController) {
     Scaffold(
         topBar = {
             GalleryTopBar()
+            MyTopAppBar(
+                title = "Add photos",
+                titleLeftButton = "Cancel",
+                onNavigationClick = { navController.popBackStack() },
+                onActionClick = {
+                    Log.d("AlbumsLog", "Albums content: $selectedPhotos")
+                    var exitedAlbum = AlbumRepository.albums.find { it.first == albumName}
+                    if (exitedAlbum == null) {
+                        AlbumRepository.addAlbum(AlbumRepository.albumName, selectedPhotos)
+                    }
+                    else {
+                        AlbumRepository.insertIntoAlbum(albumName, selectedPhotos)
+                    }
+                    navController.navigate("MyAlbumScreen")
+                },
+                actionIcon = Icons.Default.Done,
+                menuItems = listOf()
+            )
         }
     ) { paddingValues ->
         Column(

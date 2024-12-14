@@ -109,6 +109,91 @@ fun GalleryTopBar() {
         }
     )
 }
-
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MyTopAppBar(
+    title: String,
+    titleLeftButton: String,
+    onNavigationClick: () -> Unit,
+    onActionClick: () -> Unit,
+    actionIcon: ImageVector,
+    menuItems: List<Pair<String, () -> Unit>>,
+) {
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    val showMenu = remember { mutableStateOf(false) }
+    CenterAlignedTopAppBar(
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            titleContentColor = MaterialTheme.colorScheme.primary,
+        ),
+        title = {
+            Text(
+                text = title,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.headlineLarge
+            )
+        },
+        navigationIcon = {
+            IconButton(
+                onClick = { onNavigationClick() },
+                modifier = Modifier.width(100.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .clickable {onNavigationClick() },
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowLeft,
+                        contentDescription = "Back",
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Text(
+                        text = titleLeftButton,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        },
+        actions = {
+            IconButton(
+                onClick = {
+                    if (actionIcon == Icons.Default.MoreVert) {
+                        showMenu.value = !showMenu.value
+                    } else {
+                        onActionClick()
+                    }
+                },
+            ) {
+                Icon(
+                    imageVector = actionIcon,
+                    contentDescription = null
+                )
+            }
+            if (actionIcon == Icons.Default.MoreVert) {
+                DropdownMenu(
+                    modifier = Modifier.clip(RoundedCornerShape(12.dp)),
+                    expanded = showMenu.value,
+                    onDismissRequest = { showMenu.value = false },
+                    properties = PopupProperties(
+                        dismissOnClickOutside = true
+                    )
+                ) {
+                    menuItems.forEach { menuItem ->
+                        DropdownMenuItem(
+                            text = { Text(menuItem.first) },
+                            onClick = {
+                                menuItem.second() // Gọi hàm onClick của mục menu
+                                showMenu.value = false
+                            }
+                        )
+                    }
+                }
+            }
+        },
+        scrollBehavior = scrollBehavior,
+    )
+}
 
 
