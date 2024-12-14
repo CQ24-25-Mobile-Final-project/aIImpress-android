@@ -32,7 +32,7 @@ android {
 
     defaultConfig {
         applicationId = "com.hcmus"
-        minSdk = 29
+        minSdk = 31
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -159,4 +159,5 @@ dependencies {
     implementation ("com.google.accompanist:accompanist-insets:0.23.1")
     implementation ("androidx.compose.material:material-icons-core:1.4.0")
 
+    implementation("androidx.core:core-splashscreen:1.0.1")
 }
