@@ -23,7 +23,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
     kotlin("plugin.serialization") version "2.0.21"
-//    id("com.google.gms.google-services") version "4.4.2"
+    id("com.google.gms.google-services") version "4.4.2"
 }
 
 android {
@@ -138,9 +138,9 @@ dependencies {
     implementation(libs.serializable)
     implementation(libs.retrofit.kotlin.serialization)
 
-//    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
-//    implementation("com.google.firebase:firebase-auth")
-//    implementation("com.firebaseui:firebase-ui-auth:7.2.0")
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.firebaseui:firebase-ui-auth:7.2.0")
 
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation ("androidx.compose.ui:ui:1.4.0")
