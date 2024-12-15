@@ -1,5 +1,6 @@
 package com.hcmus.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,9 +10,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.rounded.Voicemail
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
@@ -25,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
@@ -34,6 +38,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hcmus.ui.theme.BluePrimary
 import com.hcmus.ui.theme.MyApplicationTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 val btnColor = ButtonColors(
   containerColor = BluePrimary,
@@ -43,7 +49,13 @@ val btnColor = ButtonColors(
 )
 
 @Composable
-fun LoginScreen(onLoginSuccess: () -> Unit) {
+fun LoginScreen(
+  onLoginSuccess: () -> Unit,
+  onLoginEmail: (email: String, password: String) -> Unit
+) {
+  var email by remember { mutableStateOf("") }
+  var password by remember { mutableStateOf("") }
+
   Column(
     modifier = Modifier
       .fillMaxSize()
@@ -59,9 +71,9 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
       Text(
-        text = "WALPER",
+        text = "FOTO",
         style = TextStyle(
-          color = BluePrimary, // Adjusted to match the logo color
+          color = BluePrimary,
           fontSize = 28.sp
         )
       )
@@ -82,11 +94,36 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
       modifier = Modifier.fillMaxWidth(),
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
+      OutlinedTextField(
+        value = email,
+        onValueChange = { email = it },
+        label = { Text("Email") },
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth()
+      )
+
+      OutlinedTextField(
+        value = password,
+        onValueChange = { password = it },
+        label = { Text("Password") },
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth(),
+        visualTransformation = PasswordVisualTransformation()
+      )
+
+      Spacer(modifier = Modifier.height(24.dp))
+
       SignInButton(
         text = "Continue With Email",
         color = BluePrimary,
         icon = Icons.Default.AccountBox,
-        onClick = onLoginSuccess
+        onClick = { onLoginEmail(email, password) }
+      )
+
+      Text(
+        text = "Or",
+        color = Color.Black,
+        modifier = Modifier.padding(top = 16.dp)
       )
 
       Spacer(modifier = Modifier.height(16.dp))
@@ -94,7 +131,6 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
       SignInButton(
         text = "Continue With Google",
         color = Color.White,
-        icon = Icons.Default.AccountBox,
         onClick = onLoginSuccess
       )
 
@@ -151,6 +187,6 @@ fun SignInButton(
 @Composable
 private fun DefaultPreview() {
   MyApplicationTheme {
-    LoginScreen { }
+    LoginScreen({}, { } as (String, String) -> Unit)
   }
 }

@@ -23,6 +23,7 @@ import com.hcmus.ui.secret.AuthenticationScreen
 import com.hcmus.ui.secret.SecretPhotoViewScreen
 import com.hcmus.ui.story.SharedGalleryScreen
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.navigation.compose.rememberNavController
@@ -35,100 +36,105 @@ import androidx.core.app.ActivityCompat
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        val content = findViewById<View>(android.R.id.content)
-        content.viewTreeObserver.addOnPreDrawListener(
-            object : ViewTreeObserver.OnPreDrawListener {
-                override fun onPreDraw(): Boolean {
-                    content.viewTreeObserver.removeOnPreDrawListener(this)
-                    return true
-                }
-            }
-        )
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        
-        val permissions = if (Build.VERSION.SDK_INT >= 33) {
-            arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
-        } else {
-            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+  override fun onCreate(savedInstanceState: Bundle?) {
+    val content = findViewById<View>(android.R.id.content)
+    content.viewTreeObserver.addOnPreDrawListener(
+      object : ViewTreeObserver.OnPreDrawListener {
+        override fun onPreDraw(): Boolean {
+          content.viewTreeObserver.removeOnPreDrawListener(this)
+          return true
         }
-        ActivityCompat.requestPermissions(this, permissions, 0)
+      }
+    )
+    super.onCreate(savedInstanceState)
+    enableEdgeToEdge()
 
-        setContent {
-            MyApplicationTheme {
-                val navController = rememberNavController()
-                MainNavigation(navController = navController)
-            }
-        }
+    val permissions = if (Build.VERSION.SDK_INT >= 33) {
+      arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
+    } else {
+      arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
     }
+    ActivityCompat.requestPermissions(this, permissions, 0)
+
+    setContent {
+      MyApplicationTheme {
+        val navController = rememberNavController()
+        MainNavigation(navController = navController)
+      }
+    }
+  }
 }
 
 @Composable
 fun MainNavigation(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = "login") {
-        composable("login") {
-            LoginScreen(onLoginSuccess = {
-                navController.navigate("gallery") {
-                    popUpTo("login") { inclusive = true }
-                }
-            })
-        }
-
-        // Main App Screens
-        composable("gallery") { PhotoGalleryScreen(navController) }
-        composable("authentication") { AuthenticationScreen(navController) }
-        composable("view") {
-            SecretPhotoViewScreen(
-                onBackPressed = {
-                    navController.navigate("gallery") {
-                        popUpTo("gallery") { inclusive = true } // Clear intermediate screens
-                    }
-                }
-            )
-        }
-
-        composable(
-            route = "imageDetail/{photoUri}",
-            arguments = listOf(navArgument("photoUri") {
-                type = NavType.StringType
-            })
-        ) { backStackEntry ->
-            val photoUri = backStackEntry.arguments?.getString("photoUri") ?: ""
-            ImageDetailScreen(photoUri = photoUri, navController = navController)
-        }
-
-        composable(
-            route = "editImage/{photoUri}",
-            arguments = listOf(navArgument("photoUri") {
-                type = NavType.StringType
-            })
-        ) { backStackEntry ->
-            val photoUri = backStackEntry.arguments?.getString("photoUri") ?: ""
-            EditImageScreen(photoUri = photoUri, navController = navController)
-        }
-
-        composable("MyAlbumScreen") {
-            MyAlbumScreen(navController = navController)
-        }
-        composable("AddNewAlbum") {
-            AddNewAlbum(navController = navController)
-        }
-
-        composable("SelectImageForAlbum") {
-            SelectImageForAlbum(navController = navController)
-        }
-
-        composable("DisplayPhotoInAlbum") {
-            DisplayPhotoInAlbum(navController = navController)
-        }
-
-        composable("imagePicker") {
-            ImagePickerScreen(context = LocalContext.current)
-        }
-
-        composable("shareScreen") { SharedGalleryScreen(navController) }
-        composable("galleryScreen") { PhotoGalleryScreen(navController) }
-        composable("appContent") { AppContent(navController) }
+  NavHost(navController = navController, startDestination = "login") {
+    composable("login") {
+      LoginScreen(
+        onLoginSuccess = {
+          navController.navigate("gallery") {
+            popUpTo("login") { inclusive = true }
+          }
+        },
+          onLoginEmail = { email, password ->
+            Log.d("Login", "Email: $email, Password: $password")
+          }
+      )
     }
+
+    // Main App Screens
+    composable("gallery") { PhotoGalleryScreen(navController) }
+    composable("authentication") { AuthenticationScreen(navController) }
+    composable("view") {
+      SecretPhotoViewScreen(
+        onBackPressed = {
+          navController.navigate("gallery") {
+            popUpTo("gallery") { inclusive = true } // Clear intermediate screens
+          }
+        }
+      )
+    }
+
+    composable(
+      route = "imageDetail/{photoUri}",
+      arguments = listOf(navArgument("photoUri") {
+        type = NavType.StringType
+      })
+    ) { backStackEntry ->
+      val photoUri = backStackEntry.arguments?.getString("photoUri") ?: ""
+      ImageDetailScreen(photoUri = photoUri, navController = navController)
+    }
+
+    composable(
+      route = "editImage/{photoUri}",
+      arguments = listOf(navArgument("photoUri") {
+        type = NavType.StringType
+      })
+    ) { backStackEntry ->
+      val photoUri = backStackEntry.arguments?.getString("photoUri") ?: ""
+      EditImageScreen(photoUri = photoUri, navController = navController)
+    }
+
+    composable("MyAlbumScreen") {
+      MyAlbumScreen(navController = navController)
+    }
+    composable("AddNewAlbum") {
+      AddNewAlbum(navController = navController)
+    }
+
+    composable("SelectImageForAlbum") {
+      SelectImageForAlbum(navController = navController)
+    }
+
+    composable("DisplayPhotoInAlbum") {
+      DisplayPhotoInAlbum(navController = navController)
+    }
+
+    composable("imagePicker") {
+      ImagePickerScreen(context = LocalContext.current)
+    }
+
+    composable("shareScreen") { SharedGalleryScreen(navController) }
+    composable("galleryScreen") { PhotoGalleryScreen(navController) }
+    composable("appContent") { AppContent(navController) }
+  }
 }

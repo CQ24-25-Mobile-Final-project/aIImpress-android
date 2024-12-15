@@ -160,4 +160,7 @@ dependencies {
     implementation ("androidx.compose.material:material-icons-core:1.4.0")
 
     implementation("androidx.core:core-splashscreen:1.0.1")
+
+    // https://mvnrepository.com/artifact/com.google.android.libraries.identity.googleid/googleid
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 }
