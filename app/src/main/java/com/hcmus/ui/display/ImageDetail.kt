@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.hcmus.R
+import showMoreOptions
 
 // Image Detail Screen
 @Composable
@@ -116,7 +118,7 @@ fun DetailTopBar(navController: NavController) {
 @Composable
 fun DetailBottomBar(navController: NavController, photoUri: String) {
     val selectedItem = remember { mutableStateOf(0) }
-
+    val showDialog = remember { mutableStateOf(false) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -162,9 +164,14 @@ fun DetailBottomBar(navController: NavController, photoUri: String) {
             isSelected = selectedItem.value == 4,
             iconRes = R.drawable.menu_icon,
             contentDescription = "More Icon",
-            onClick = { selectedItem.value = 4 },
+            onClick = {
+                selectedItem.value = 4
+                showDialog.value = true },
 
         )
+    }
+    if (showDialog.value) {
+        showMoreOptions(navController, photoUri, context = LocalContext.current)
     }
 }
 

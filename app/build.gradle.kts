@@ -82,6 +82,9 @@ android {
 dependencies {
 
     implementation(libs.androidx.ui.text.google.fonts)
+    implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.androidx.foundation.layout.android)
     val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)
     androidTestImplementation(composeBom)
@@ -158,6 +161,8 @@ dependencies {
     implementation ("androidx.compose.material:material-icons-extended:1.4.0")
     implementation ("com.google.accompanist:accompanist-insets:0.23.1")
     implementation ("androidx.compose.material:material-icons-core:1.4.0")
+    implementation ("androidx.exifinterface:exifinterface:1.3.6")
+
 
     implementation("androidx.core:core-splashscreen:1.0.1")
 
