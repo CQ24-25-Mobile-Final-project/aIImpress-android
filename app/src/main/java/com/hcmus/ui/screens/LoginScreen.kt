@@ -1,11 +1,10 @@
 package com.hcmus.ui.screens
 
-import androidx.compose.foundation.Image
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,12 +12,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.rounded.Voicemail
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,11 +24,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,18 +34,13 @@ import com.hcmus.ui.theme.BluePrimary
 import com.hcmus.ui.theme.MyApplicationTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-
-val btnColor = ButtonColors(
-  containerColor = BluePrimary,
-  contentColor = Color.White,
-  disabledContainerColor = Color.White,
-  disabledContentColor = Color.White
-)
+import androidx.compose.foundation.clickable
 
 @Composable
 fun LoginScreen(
   onLoginSuccess: () -> Unit,
-  onLoginEmail: (email: String, password: String) -> Unit
+  onLoginEmail: (email: String, password: String) -> Unit,
+  onSignIn: () -> Unit
 ) {
   var email by remember { mutableStateOf("") }
   var password by remember { mutableStateOf("") }
@@ -114,7 +103,7 @@ fun LoginScreen(
       Spacer(modifier = Modifier.height(24.dp))
 
       SignInButton(
-        text = "Continue With Email",
+        text = "Login",
         color = BluePrimary,
         icon = Icons.Default.AccountBox,
         onClick = { onLoginEmail(email, password) }
@@ -146,11 +135,25 @@ fun LoginScreen(
 
     Spacer(modifier = Modifier.height(16.dp))
 
-    Text(
-      text = "Already Have An Account? Sign In",
-      color = BluePrimary,
-      modifier = Modifier.padding(top = 16.dp)
-    )
+    Row(
+        modifier = Modifier
+            .padding(top = 16.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Already Have An Account? ",
+            color = Color.Gray
+        )
+        Text(
+            text = "Sign In",
+            color = BluePrimary,
+            modifier = Modifier.clickable { onSignIn() },
+            style = TextStyle(
+                fontWeight = FontWeight.Bold
+            )
+        )
+    }
   }
 }
 
@@ -187,6 +190,6 @@ fun SignInButton(
 @Composable
 private fun DefaultPreview() {
   MyApplicationTheme {
-    LoginScreen({}, { } as (String, String) -> Unit)
+    LoginScreen({}, {} as (String, String) -> Unit, {})
   }
 }

@@ -31,8 +31,16 @@ import com.hcmus.ui.theme.MyApplicationTheme
 import dagger.hilt.android.AndroidEntryPoint
 import android.view.View
 import android.view.ViewTreeObserver
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.core.app.ActivityCompat
+import com.hcmus.auth.AuthResponse
+import com.hcmus.auth.AuthenticationManager
+import com.hcmus.ui.screens.SignInScreen
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -67,6 +75,13 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainNavigation(navController: NavHostController) {
+  val context = LocalContext.current
+
+  val authManager = remember {
+    AuthenticationManager(context)
+  }
+  val coroutineScope = rememberCoroutineScope()
+
   NavHost(navController = navController, startDestination = "login") {
     composable("login") {
       LoginScreen(
@@ -75,9 +90,46 @@ fun MainNavigation(navController: NavHostController) {
             popUpTo("login") { inclusive = true }
           }
         },
-          onLoginEmail = { email, password ->
-            Log.d("Login", "Email: $email, Password: $password")
+        onLoginEmail = { email, password ->
+          authManager.loginWithEmail(email, password)
+            .onEach { response ->
+              if (response is AuthResponse.Success) {
+                Log.d("Login", "Success: $response")
+                Toast.makeText(context, "Login Success", Toast.LENGTH_SHORT).show()
+                navController.navigate("gallery") {
+                  popUpTo("login") { inclusive = true }
+                }
+              } else {
+                Log.d("Login", "Error: $response")
+                Toast.makeText(context, "Login Failed", Toast.LENGTH_SHORT).show()
+              }
+            }
+            .launchIn(coroutineScope)
+        },
+        onSignIn = {
+          navController.navigate("signIn") {
+            popUpTo("login") { inclusive = true }
           }
+        }
+      )
+    }
+
+    composable("signIn") {
+      SignInScreen(
+        onSignIn = { email, password ->
+          Log.d("Login", "Creating account with email:$email, pass:$password")
+
+          authManager.createAccountWithEmail(email, password)
+            .onEach { response ->
+              if (response is AuthResponse.Success) {
+                Toast.makeText(context, "Create Account Success", Toast.LENGTH_SHORT).show()
+                navController.navigate("login")
+              } else {
+                Toast.makeText(context, "Create Account Failed", Toast.LENGTH_SHORT).show()
+              }
+            }
+            .launchIn(coroutineScope)
+        },
       )
     }
 
