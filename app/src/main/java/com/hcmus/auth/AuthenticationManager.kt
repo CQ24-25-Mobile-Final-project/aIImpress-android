@@ -99,5 +99,7 @@ class AuthenticationManager(val context: Context) {
     } catch (e: Exception) {
       trySend(AuthResponse.Error(message = e.message ?: ""))
     }
+
+    awaitClose()
   }
 }

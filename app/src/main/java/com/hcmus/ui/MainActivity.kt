@@ -35,6 +35,7 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.text.resolveDefaults
 import androidx.core.app.ActivityCompat
 import com.hcmus.auth.AuthResponse
 import com.hcmus.auth.AuthenticationManager
@@ -46,14 +47,12 @@ import kotlinx.coroutines.flow.onEach
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     val content = findViewById<View>(android.R.id.content)
-    content.viewTreeObserver.addOnPreDrawListener(
-      object : ViewTreeObserver.OnPreDrawListener {
-        override fun onPreDraw(): Boolean {
-          content.viewTreeObserver.removeOnPreDrawListener(this)
-          return true
-        }
+    content.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+      override fun onPreDraw(): Boolean {
+        content.viewTreeObserver.removeOnPreDrawListener(this)
+        return true
       }
-    )
+    })
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
 
@@ -84,34 +83,41 @@ fun MainNavigation(navController: NavHostController) {
 
   NavHost(navController = navController, startDestination = "login") {
     composable("login") {
-      LoginScreen(
-        onLoginSuccess = {
-          navController.navigate("gallery") {
-            popUpTo("login") { inclusive = true }
-          }
-        },
-        onLoginEmail = { email, password ->
-          authManager.loginWithEmail(email, password)
-            .onEach { response ->
-              if (response is AuthResponse.Success) {
-                Log.d("Login", "Success: $response")
-                Toast.makeText(context, "Login Success", Toast.LENGTH_SHORT).show()
-                navController.navigate("gallery") {
-                  popUpTo("login") { inclusive = true }
-                }
-              } else {
-                Log.d("Login", "Error: $response")
-                Toast.makeText(context, "Login Failed", Toast.LENGTH_SHORT).show()
-              }
-            }
-            .launchIn(coroutineScope)
-        },
-        onSignIn = {
-          navController.navigate("signIn") {
-            popUpTo("login") { inclusive = true }
-          }
+      LoginScreen(onLoginSuccess = {
+        navController.navigate("gallery") {
+          popUpTo("login") { inclusive = true }
         }
-      )
+      }, onLoginEmail = { email, password ->
+        authManager.loginWithEmail(email, password).onEach { response ->
+            if (response is AuthResponse.Success) {
+              Log.d("Login", "Success: $response")
+              Toast.makeText(context, "Login Success", Toast.LENGTH_SHORT).show()
+              navController.navigate("gallery") {
+                popUpTo("login") { inclusive = true }
+              }
+            } else {
+              Log.d("Login", "Error: $response")
+              Toast.makeText(context, "Login Failed", Toast.LENGTH_SHORT).show()
+            }
+          }.launchIn(coroutineScope)
+      }, onSignIn = {
+        navController.navigate("signIn") {
+          popUpTo("login") { inclusive = true }
+        }
+      }, onLoginGoogle = {
+        authManager.signInWithGoogle().onEach { response ->
+            if (response is AuthResponse.Success) {
+              Log.d("Login", "Success: $response")
+              Toast.makeText(context, "Login Success", Toast.LENGTH_SHORT).show()
+              navController.navigate("gallery") {
+                popUpTo("login") { inclusive = true }
+              }
+            } else {
+              Log.d("Login", "Error: $response")
+              Toast.makeText(context, "Login Failed", Toast.LENGTH_SHORT).show()
+            }
+          }.launchIn(coroutineScope)
+      })
     }
 
     composable("signIn") {
@@ -119,16 +125,14 @@ fun MainNavigation(navController: NavHostController) {
         onSignIn = { email, password ->
           Log.d("Login", "Creating account with email:$email, pass:$password")
 
-          authManager.createAccountWithEmail(email, password)
-            .onEach { response ->
+          authManager.createAccountWithEmail(email, password).onEach { response ->
               if (response is AuthResponse.Success) {
                 Toast.makeText(context, "Create Account Success", Toast.LENGTH_SHORT).show()
                 navController.navigate("login")
               } else {
                 Toast.makeText(context, "Create Account Failed", Toast.LENGTH_SHORT).show()
               }
-            }
-            .launchIn(coroutineScope)
+            }.launchIn(coroutineScope)
         },
       )
     }
@@ -137,18 +141,15 @@ fun MainNavigation(navController: NavHostController) {
     composable("gallery") { PhotoGalleryScreen(navController) }
     composable("authentication") { AuthenticationScreen(navController) }
     composable("view") {
-      SecretPhotoViewScreen(
-        onBackPressed = {
-          navController.navigate("gallery") {
-            popUpTo("gallery") { inclusive = true } // Clear intermediate screens
-          }
+      SecretPhotoViewScreen(onBackPressed = {
+        navController.navigate("gallery") {
+          popUpTo("gallery") { inclusive = true } // Clear intermediate screens
         }
-      )
+      })
     }
 
     composable(
-      route = "imageDetail/{photoUri}",
-      arguments = listOf(navArgument("photoUri") {
+      route = "imageDetail/{photoUri}", arguments = listOf(navArgument("photoUri") {
         type = NavType.StringType
       })
     ) { backStackEntry ->
@@ -157,8 +158,7 @@ fun MainNavigation(navController: NavHostController) {
     }
 
     composable(
-      route = "editImage/{photoUri}",
-      arguments = listOf(navArgument("photoUri") {
+      route = "editImage/{photoUri}", arguments = listOf(navArgument("photoUri") {
         type = NavType.StringType
       })
     ) { backStackEntry ->

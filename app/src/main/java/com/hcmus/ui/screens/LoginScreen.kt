@@ -1,6 +1,5 @@
 package com.hcmus.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,7 +12,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -40,7 +38,8 @@ import androidx.compose.foundation.clickable
 fun LoginScreen(
   onLoginSuccess: () -> Unit,
   onLoginEmail: (email: String, password: String) -> Unit,
-  onSignIn: () -> Unit
+  onSignIn: () -> Unit,
+  onLoginGoogle: () -> Unit
 ) {
   var email by remember { mutableStateOf("") }
   var password by remember { mutableStateOf("") }
@@ -120,7 +119,7 @@ fun LoginScreen(
       SignInButton(
         text = "Continue With Google",
         color = Color.White,
-        onClick = onLoginSuccess
+        onClick = onLoginGoogle
       )
 
       Spacer(modifier = Modifier.height(16.dp))
@@ -190,6 +189,6 @@ fun SignInButton(
 @Composable
 private fun DefaultPreview() {
   MyApplicationTheme {
-    LoginScreen({}, {} as (String, String) -> Unit, {})
+    LoginScreen({}, {} as (String, String) -> Unit, {}, {})
   }
 }
