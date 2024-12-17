@@ -78,7 +78,7 @@ fun PhotoGalleryScreen(navController: NavController) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            categorizedPhotos.forEach { (date, photos) ->
+            photosByDate.forEach { (date, photos) ->
                 item {
                     Text(
                         text = date,
