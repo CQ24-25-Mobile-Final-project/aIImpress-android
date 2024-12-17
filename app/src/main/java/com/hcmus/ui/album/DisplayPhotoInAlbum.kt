@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.Alignment
@@ -54,31 +55,40 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-
 import com.hcmus.ui.theme.MyApplicationTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.layout.ContentScale
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.hcmus.ui.components.GalleryTopBar
 import com.hcmus.ui.components.MyTopAppBar
+import androidx.compose.runtime.livedata.observeAsState
 
 @Composable
 fun DisplayPhotoInAlbum(navController: NavController) {
+    val albumViewModel: AlbumViewModel = hiltViewModel()
     val selectedPhotos = remember { mutableStateListOf<Uri>() }
     val isSelectedDropdownOption = remember { mutableStateOf(false) }
     val showDeletePopup = remember { mutableStateOf(false) }
     val isDeleteAlbumDropdownOption = remember { mutableStateOf(false) }
     val isRenameAlbumDropdownOption = remember { mutableStateOf(false) }
-    var albumName = remember { AlbumRepository.albumName }
-    val photos = remember {
-        AlbumRepository.albums.find { it.first == albumName }?.second ?: emptyList()
-    }
+    val albumName = remember { AlbumRepository.albumName }
+    val photos by albumViewModel.photos.observeAsState(emptyList())
+    Log.d("test", "Albums content: $albumName")
+    Log.d("test", "Photos: $photos")
 
+    LaunchedEffect(albumName) {
+        Log.d("DisplayPhotoInAlbum", "Album name observed: $albumName")
+        albumViewModel.selectAlbum(albumName)
+    }
     Scaffold (
         topBar = {
-            GalleryTopBar()
+            GalleryTopBar(onActionClick = {}, title = "")
             MyTopAppBar(
                 title = "",
                 titleLeftButton = "Albums",
@@ -104,6 +114,7 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                 modifier = Modifier
                     .fillMaxSize()
             ) {
+                val newAlbumName = albumName
                 if (isRenameAlbumDropdownOption.value) {
                     Row (modifier = Modifier
                         .padding(16.dp)
@@ -111,16 +122,11 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         TextField(
-                            value = albumName,
-                            onValueChange = { albumName = it },
+                            value = newAlbumName,
+                            onValueChange = { albumViewModel.addAlbumName(newAlbumName) },
                             textStyle = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.primary),
                             modifier = Modifier
                                 .padding(16.dp),
-//                            colors = TextFieldDefaults.textFieldColor(
-//                                containerColor = Color.Transparent,
-//                                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-//                                unfocusedIndicatorColor = Color.Transparent
-//                            )
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
@@ -169,12 +175,16 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text ="Select all",
+                                    color = Color.White
                                 )
                             }
                         }
 
                         Button(
-                            onClick = { isSelectedDropdownOption.value = !isSelectedDropdownOption.value },
+                            onClick = {
+                                isSelectedDropdownOption.value = !isSelectedDropdownOption.value
+                                selectedPhotos.clear()
+                                      },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = Color.Black
@@ -183,6 +193,7 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                         ) {
                             Text(
                                 text ="Done",
+                                color = Color.White
                             )
                         }
                     }
@@ -212,7 +223,8 @@ fun DisplayPhotoInAlbum(navController: NavController) {
 
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(4),
-                    modifier = Modifier.fillMaxHeight(),
+                    modifier = Modifier.fillMaxWidth()
+                        .weight(1f),
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
@@ -222,18 +234,22 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                         Box(
                             modifier = Modifier
                                 .aspectRatio(1f)
-                                .toggleable(
-                                    value = isSelected,
-                                    onValueChange = {
+                                .clickable {
+                                    if(!isSelectedDropdownOption.value)
+                                    {
+                                        navController.navigate("imageDetail/${Uri.encode(imageUri.toString())}")
+                                    }
+                                    else {
                                         if (isSelected) selectedPhotos.remove(imageUri)
                                         else selectedPhotos.add(imageUri)
                                     }
-                                )
+                                }
                         ) {
                             Image(
                                 painter = rememberAsyncImagePainter(model = imageUri),
                                 contentDescription = "Loaded image: $imageUri",
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                contentScale = ContentScale.Crop
                             )
                             if (isSelected) {
                                 Box(
@@ -265,7 +281,7 @@ fun DisplayPhotoInAlbum(navController: NavController) {
             }
         }
         if (isSelectedDropdownOption.value) {
-            FloatingButtonExample(Icons.Default.Delete, "Delete", showDeletePopup)
+            FloatingButtonExample(Icons.Default.Delete, "Delete", showDeletePopup, albumName, selectedPhotos, albumViewModel)
         }
 
         if(isDeleteAlbumDropdownOption.value) {
@@ -303,7 +319,8 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                                         showDeletePopup.value = false
                                     }
                                 ) {
-                                    Text(text = "Cancel")
+                                    Text(text = "Cancel",
+                                        color = Color.White)
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Button(onClick = {
@@ -314,7 +331,8 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                                 }) {
                                     Text(
                                         text = "Delete",
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
                                     )
                                 }
                             }
@@ -327,7 +345,13 @@ fun DisplayPhotoInAlbum(navController: NavController) {
 }
 
 @Composable
-fun FloatingButtonExample(icon: ImageVector, iconName: String, showDeletePopup: MutableState<Boolean> = remember { mutableStateOf(false) }) {
+fun FloatingButtonExample(icon: ImageVector,
+                          iconName: String,
+                          showDeletePopup: MutableState<Boolean> = remember { mutableStateOf(false)},
+                          albumName: String,
+                          selectedPhotos: List<Uri>,
+                          albumViewModel: AlbumViewModel
+                          ) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -338,7 +362,8 @@ fun FloatingButtonExample(icon: ImageVector, iconName: String, showDeletePopup: 
                 .align(Alignment.BottomEnd)
                 .padding( 16.dp )
                 .fillMaxWidth(),
-            containerColor = MaterialTheme.colorScheme.primary
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = Color.White
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
@@ -377,13 +402,20 @@ fun FloatingButtonExample(icon: ImageVector, iconName: String, showDeletePopup: 
                         Spacer(modifier = Modifier.height(16.dp))
                         Row {
                             Button(onClick = { showDeletePopup.value = false }) {
-                                Text(text = "Cancel")
+                                Text(text = "Cancel",
+                                    color = Color.White
+                                )
                             }
                             Spacer(modifier = Modifier.width(8.dp))
-                            Button(onClick = { }) {
+                            Button(onClick = { selectedPhotos.forEach { photoUri ->
+                                albumViewModel.deletePhotoInAlbum(albumName, photoUri)
+                            }
+                                showDeletePopup.value = false
+                            }) {
                                 Text(
                                     text = "Delete",
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    color =Color.White
                                 )
                             }
                         }

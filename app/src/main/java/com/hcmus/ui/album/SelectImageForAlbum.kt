@@ -40,8 +40,10 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -57,32 +59,34 @@ import com.hcmus.ui.components.MyTopAppBar
 
 @Composable
 fun SelectImageForAlbum(navController: NavController) {
-
+    val albumViewModel: AlbumViewModel = hiltViewModel()
     val context = LocalContext.current
     ImagePickerScreen(context = context)
     val photos = remember { mutableStateOf<List<Uri>>(emptyList()) }
     val selectedPhotos = remember { mutableStateListOf<Uri>() }
     val albumName = remember { AlbumRepository.albumName }
 
+    // In log giá trị albumName
+    Log.d("test", "Album Name: $albumName")
+
     RequestMediaPermissions {
-        photos.value = fetchImages(context) // Dynamically fetch images
+        photos.value = fetchImages(context) 
     }
 
     Scaffold(
         topBar = {
-            GalleryTopBar()
+            GalleryTopBar(onActionClick = {}, title = "")
             MyTopAppBar(
                 title = "Add photos",
                 titleLeftButton = "Cancel",
                 onNavigationClick = { navController.popBackStack() },
                 onActionClick = {
-                    Log.d("AlbumsLog", "Albums content: $selectedPhotos")
-                    var exitedAlbum = AlbumRepository.albums.find { it.first == albumName}
-                    if (exitedAlbum == null) {
-                        AlbumRepository.addAlbum(AlbumRepository.albumName, selectedPhotos)
-                    }
-                    else {
-                        AlbumRepository.insertIntoAlbum(albumName, selectedPhotos)
+                    if (albumViewModel.albums.value?.find { it.first == albumName } == null) {
+                        albumViewModel.addAlbum(albumName, selectedPhotos)
+                        Log.d("test", "Album does not exist. Creating new album.")
+                    } else {
+                        Log.d("test", "Album exists. Adding photos to the existing album.")
+                        albumViewModel.insertIntoAlbum(albumName, selectedPhotos)
                     }
                     navController.navigate("MyAlbumScreen")
                 },
@@ -119,7 +123,8 @@ fun SelectImageForAlbum(navController: NavController) {
                         Image(
                             painter = rememberAsyncImagePainter(model = imageUri),
                             contentDescription = "Loaded image: $imageUri",
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            contentScale = ContentScale.Crop
                         )
                         if (isSelected) {
                             Box(
@@ -189,8 +194,6 @@ fun RequestMediaPermissions(content: @Composable () -> Unit) {
         }
     }
 }
-
-
 
 fun fetchImages(context: Context): List<Uri> {
     val images = mutableListOf<Uri>()

@@ -1,6 +1,7 @@
 package com.hcmus.ui.album
 
 import android.annotation.SuppressLint
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -41,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -48,12 +50,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.rememberAsyncImagePainter
 import com.hcmus.R
 import com.hcmus.ui.components.CustomBottomBar
 import com.hcmus.ui.components.GalleryTopBar
@@ -63,7 +68,8 @@ import com.hcmus.ui.components.MyTopAppBar
 @Composable
 fun MyAlbumScreen(navController: NavController) {
     var isGridView by remember { mutableStateOf(true) }
-    val albums = AlbumRepository.albums
+    val albumViewModel: AlbumViewModel = hiltViewModel()
+    val albums by albumViewModel.albums.observeAsState(emptyList())
 
     LaunchedEffect(albums) {
         Log.d("AlbumsLog", "Albums content: $albums")
@@ -71,20 +77,11 @@ fun MyAlbumScreen(navController: NavController) {
 
     Scaffold(
         topBar = {
-            GalleryTopBar()
-            MyTopAppBar(
-                title = "Albums",
-                titleLeftButton = "Back",
-                onNavigationClick = { /* Handle navigation click */ },
-                onActionClick = {
-                    try {
-                        navController.navigate("AddNewAlbum")
-                    } catch (e: Exception) {
-                        Log.e("Navigation Error", e.message.toString())
-                    }
+            GalleryTopBar(
+                onActionClick ={
+                    navController.navigate("AddNewAlbum")
                 },
-                actionIcon = Icons.Default.Add,
-                menuItems = listOf()
+                title = "Album"
             )
         },
         bottomBar = {
@@ -114,7 +111,7 @@ fun MyAlbumScreen(navController: NavController) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                BottomSheetExample()
+                BottomSheetExample(albumViewModel)
                 IconButton(onClick = { isGridView = !isGridView }) {
                     Icon(
                         imageVector = if (isGridView) Icons.Default.Check else Icons.Default.CheckCircle,
@@ -136,7 +133,9 @@ fun MyAlbumScreen(navController: NavController) {
                                 .clickable(
                                     onClick = {
                                         try {
-                                            AlbumRepository.addAlbumName(name)
+                                            Log.d("test", "Albums content: $name")
+
+                                            albumViewModel.selectAlbum(name)
                                             navController.navigate("DisplayPhotoInAlbum")
                                         } catch (e: Exception) {
                                             Log.e("Navigation Error", e.message.toString())
@@ -144,7 +143,7 @@ fun MyAlbumScreen(navController: NavController) {
                                     }
                                 )
                         ) {
-                            AlbumItemGridView(name, photos.size)
+                            AlbumItemGridView(name, photos.size, photos[0])
                         }
                     }
                 }
@@ -160,6 +159,7 @@ fun MyAlbumScreen(navController: NavController) {
                                 .clickable(
                                     onClick = {
                                         try {
+                                            albumViewModel.selectAlbum(name)
                                             navController.navigate("DisplayPhotoInAlbum")
                                         } catch (e: Exception) {
                                             Log.e("Navigation Error", e.message.toString())
@@ -167,7 +167,7 @@ fun MyAlbumScreen(navController: NavController) {
                                     }
                                 )
                         ) {
-                            AlbumItemListView(name, photo.size)
+                            AlbumItemListView(name, photo.size, photo[0])
                         }
                     }
                 }
@@ -178,16 +178,21 @@ fun MyAlbumScreen(navController: NavController) {
 
 
 @Composable
-fun AlbumItemListView(albumName: String, photoCount: Int) {
+fun AlbumItemListView(albumName: String, photoCount: Int, firstPhotoUri: Uri?) {
     Row (verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
             .padding(0.dp, 0.dp, 8.dp, 4.dp)) {
         Image(
-            painter = painterResource(id = R.drawable.wallpaper),
+            painter = if (firstPhotoUri != null) {
+                rememberAsyncImagePainter(model = firstPhotoUri)
+            } else {
+                painterResource(id = R.drawable.avatar)
+            },
             contentDescription = "wallpaper of an item",
             modifier = Modifier
                 .size(100.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .fillMaxWidth(),
+            contentScale = ContentScale.Crop
         )
         Spacer(modifier = Modifier.width(12.dp))
         Column (
@@ -207,18 +212,23 @@ fun AlbumItemListView(albumName: String, photoCount: Int) {
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
-fun AlbumItemGridView(albumName: String, photoCount: Int) {
+fun AlbumItemGridView(albumName: String, photoCount: Int, firstPhotoUri: Uri?) {
     Column {
         BoxWithConstraints(
             modifier = Modifier.fillMaxWidth()
                 .wrapContentHeight()
         ) {
             Image(
-                painter = painterResource(id = R.drawable.wallpaper),
+                painter = if (firstPhotoUri != null) {
+                    rememberAsyncImagePainter(model = firstPhotoUri)
+                } else {
+                    painterResource(id = R.drawable.avatar)
+                },
                 contentDescription = null,
                 modifier = Modifier
                     .size(maxWidth * 1f)
-                    .clip(RoundedCornerShape(16.dp))
+                    .fillMaxWidth(),
+                contentScale = ContentScale.Crop
             )
         }
         Spacer(modifier = Modifier.width(12.dp))
@@ -239,7 +249,7 @@ fun AlbumItemGridView(albumName: String, photoCount: Int) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BottomSheetExample() {
+fun BottomSheetExample(albumViewModel: AlbumViewModel) {
     var showBottomSheet by remember { mutableStateOf(false) }
     var selectedOption by remember { mutableStateOf("Sort") }
 
@@ -283,6 +293,7 @@ fun BottomSheetExample() {
                     onClick = {
                         selectedOption = "Most photos"
                         showBottomSheet = false
+                        albumViewModel.sortAlbumsByPhotoCount()
                     }
                 )
                 CustomTransparentButton(
@@ -290,6 +301,7 @@ fun BottomSheetExample() {
                     onClick = {
                         selectedOption = "Album name"
                         showBottomSheet = false
+                        albumViewModel.sortAlbumsByName()
                     }
                 )
             }

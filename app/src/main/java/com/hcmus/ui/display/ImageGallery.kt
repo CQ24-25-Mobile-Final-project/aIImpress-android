@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -56,7 +57,7 @@ fun PhotoGalleryScreen(navController: NavController) {
                 bottom = with(LocalDensity.current) { LocalWindowInsets.current.navigationBars.bottom.toDp() }
             )
     ) {
-        GalleryTopBar()
+        GalleryTopBar(onActionClick = {}, title = "")
 
 
         SearchOrFilterBar(
