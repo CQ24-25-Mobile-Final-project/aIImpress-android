@@ -123,17 +123,24 @@ fun MainNavigation(navController: NavHostController) {
     composable("signIn") {
       SignInScreen(
         onSignIn = { email, password ->
-          Log.d("Login", "Creating account with email:$email, pass:$password")
-
-          authManager.createAccountWithEmail(email, password).onEach { response ->
-              if (response is AuthResponse.Success) {
-                Toast.makeText(context, "Create Account Success", Toast.LENGTH_SHORT).show()
-                navController.navigate("login")
-              } else {
-                Toast.makeText(context, "Create Account Failed", Toast.LENGTH_SHORT).show()
+          Log.d("Login", "Attempting to create account with email: $email")
+          
+          authManager.createAccountWithEmail(email, password)
+            .onEach { response ->
+              when (response) {
+                is AuthResponse.Success -> {
+                  Log.d("Login", "Account creation successful")
+                  Toast.makeText(context, "Account created successfully", Toast.LENGTH_SHORT).show()
+                  navController.navigate("login")
+                }
+                is AuthResponse.Error -> {
+                  Log.e("Login", "Account creation failed: ${response.message}")
+                  Toast.makeText(context, "Failed: ${response.message}", Toast.LENGTH_LONG).show()
+                }
               }
-            }.launchIn(coroutineScope)
-        },
+            }
+            .launchIn(coroutineScope)
+        }
       )
     }
 

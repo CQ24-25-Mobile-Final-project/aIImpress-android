@@ -1,6 +1,7 @@
 package com.hcmus.auth
 
 import android.content.Context
+import android.util.Log
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
@@ -13,6 +14,7 @@ import com.google.firebase.auth.auth
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
 import java.security.MessageDigest
 import java.util.UUID
 
@@ -25,14 +27,30 @@ class AuthenticationManager(val context: Context) {
   private val auth = Firebase.auth
 
   fun createAccountWithEmail(email: String, password: String): Flow<AuthResponse> = callbackFlow {
-    auth.createUserWithEmailAndPassword(email, password)
-      .addOnCompleteListener { task ->
-        if (task.isSuccessful) {
-          trySend(AuthResponse.Success)
-        } else {
-          trySend(AuthResponse.Error(task.exception?.message ?: "Unknown error"))
-        }
+    try {
+      if (email.isEmpty() || password.isEmpty()) {
+        trySend(AuthResponse.Error("Email and password cannot be empty"))
+        return@callbackFlow
       }
+
+      auth.createUserWithEmailAndPassword(email, password)
+        .addOnCompleteListener { task ->
+          if (task.isSuccessful) {
+            Log.d("Login", "createAccountWithEmail Success")
+            trySend(AuthResponse.Success)
+          } else {
+            Log.d("Login", "createAccountWithEmail Error: ${task.exception?.message}")
+            trySend(AuthResponse.Error(task.exception?.message ?: "Unknown error"))
+          }
+        }
+        .addOnFailureListener { e ->
+          Log.e("Login", "createAccountWithEmail Failure: ${e.message}")
+          trySend(AuthResponse.Error(e.message ?: "Failed to create account"))
+        }
+    } catch (e: Exception) {
+      Log.e("Login", "createAccountWithEmail Exception: ${e.message}")
+      trySend(AuthResponse.Error(e.message ?: "Unknown error occurred"))
+    }
 
     awaitClose()
   }
@@ -42,6 +60,7 @@ class AuthenticationManager(val context: Context) {
       if (task.isSuccessful) {
         trySend(AuthResponse.Success)
       } else {
+        Log.d("Login", "loginWithEmail Error: ${task.exception?.message}")
         trySend(AuthResponse.Error(task.exception?.message ?: "Unknown error"))
       }
     }
