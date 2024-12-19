@@ -17,6 +17,7 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.navigation.NavController
 import com.google.accompanist.insets.LocalWindowInsets
 import com.hcmus.R
+import com.hcmus.ui.secret.PinStorage
 
 @Composable
 fun CustomBottomBar(
@@ -70,9 +71,17 @@ fun CustomBottomBar(
                 iconRes = R.drawable.privacy_icon,
                 contentDescription = "Privacy",
                 onClick = {
+                    val savedPin = PinStorage.getPin(navController.context)
 
-                    onTabSelected(2)
-                    navController.navigate("authentication")
+                    if (savedPin.isNullOrEmpty()) {
+                        // Nếu chưa có PIN, chuyển đến màn hình tạo PIN
+                        onTabSelected(2)
+                        navController.navigate("create_pin")
+                    } else {
+                        // Nếu đã có PIN, chuyển đến màn hình xác thực
+                        onTabSelected(2)
+                        navController.navigate("authentication")
+                    }
                 }
             )
             BottomBarItem(
