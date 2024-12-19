@@ -33,7 +33,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavController
 import com.hcmus.R
 import com.hcmus.ui.album.AlbumRepository
@@ -42,10 +41,8 @@ import com.hcmus.ui.album.AlbumRepository
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun SecretPhotoViewScreen(navController: NavController, onBackPressed:()->Unit) {
+fun SecretPhotoViewScreen(navController: NavController) {
     // danh sách các album
-
-
     var expanded by remember { mutableStateOf(false)}// kiểm soát trạng thái đóng mở của menu
     var showMenu by remember { mutableStateOf(false) }
     // câph nhật các biến trạng thái
