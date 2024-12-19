@@ -53,6 +53,7 @@ import com.hcmus.auth.AuthResponse
 import com.hcmus.auth.AuthenticationManager
 import com.hcmus.ui.screens.LoginScreen
 import com.hcmus.ui.screens.SignInScreen
+import com.hcmus.ui.secret.CreatePinScreen
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -157,11 +158,7 @@ fun MainNavigation(navController: NavHostController) {
 
     composable("view") {
       SecretPhotoViewScreen(
-        onBackPressed = {
-          navController.navigate("main") {
-            popUpTo("main") { inclusive = true }
-          }
-        }
+        navController = navController
       )
     }
 
@@ -227,6 +224,8 @@ fun MainNavigation(navController: NavHostController) {
         )
       }
     }
+
+    composable("create_pin"){ CreatePinScreen(navController) }
 
 //
   }

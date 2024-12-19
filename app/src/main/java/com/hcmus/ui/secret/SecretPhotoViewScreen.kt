@@ -14,35 +14,35 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.clip
+import androidx.navigation.NavController
 import com.hcmus.R
+import com.hcmus.ui.album.AlbumRepository
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun SecretPhotoViewScreen(onBackPressed:()->Unit) {
+fun SecretPhotoViewScreen(navController: NavController) {
     // danh sách các album
-
-    var albumList by remember { mutableStateOf(listOf("DefaultVault")) }
     var expanded by remember { mutableStateOf(false)}// kiểm soát trạng thái đóng mở của menu
     var showMenu by remember { mutableStateOf(false) }
     // câph nhật các biến trạng thái
@@ -64,26 +64,35 @@ fun SecretPhotoViewScreen(onBackPressed:()->Unit) {
     )
     var isGridView by remember { mutableStateOf(true) }
 
-    // Log albums value whenever it changes
-    val albums ="default"
-    LaunchedEffect(albums) {
-        Log.d("AlbumsLog", "Albums content: $albums")
+
+    val albums by remember { derivedStateOf { Albums.albums } }
+
+    LaunchedEffect(Unit) {
+        if (Albums.albums.isEmpty()) {
+            Albums.addAlbum("DefaultVault", emptyList()) // Tạo album mặc định nếu cần
+        }
     }
+
+    val Purple40 = Color(0xFF1B87C9)
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Gallery Vault") },
                 navigationIcon = {
-                    IconButton(onClick = onBackPressed) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(onClick = {
+                        // Điều hướng về màn hình chính và xóa các màn hình trung gian
+                        navController.navigate("gallery") {
+                            popUpTo("gallery") { inclusive = false }
+                        }
+                    }) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back",tint=Color.Black)
                     }
                 },
                 actions={// cái nút ba chấm
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
-                            .background(Color.LightGray, shape = CircleShape)
+                            .size(40.dp)
                             .clickable { expanded = !expanded }
                             .padding(8.dp),
                         contentAlignment = Alignment.Center
@@ -162,8 +171,10 @@ fun SecretPhotoViewScreen(onBackPressed:()->Unit) {
                 ) {
                     IconButton(onClick = { isGridView = !isGridView }) {
                         Icon(
+
                             imageVector = if (isGridView) Icons.Default.Check else Icons.Default.CheckCircle,
-                            contentDescription = if (isGridView) "Switch to grid view" else "Switch to list view"
+                            contentDescription = if (isGridView) "Switch to grid view" else "Switch to list view",
+                            tint=Color.Black
                         )
                     }
                 }
@@ -174,16 +185,19 @@ fun SecretPhotoViewScreen(onBackPressed:()->Unit) {
                         columns = GridCells.Fixed(2),
                         modifier = Modifier.wrapContentHeight()
                     ) {
-                        items(albumList) { album ->
+                        items(albums){ album ->
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(8.dp)
-                                    .clickable { /* Navigate to album details */ }
+                                    .clickable {
+                                        // Điều hướng tới màn hình chi tiết album
+                                        navController.navigate("display_photo_in_album/${album.first}")
+                                    }
                             ) {
                                 AlbumItemGridView(
-                                    album,
-                                    0
+                                    albumName = album.first,
+                                    photoCount = album.second.size,
                                 ) // Chỉnh sửa để thêm số lượng ảnh thực tế
                             }
                         }
@@ -192,16 +206,19 @@ fun SecretPhotoViewScreen(onBackPressed:()->Unit) {
                     LazyColumn(
                         modifier = Modifier.padding(0.dp, 8.dp, 4.dp, 8.dp)
                     ) {
-                        items(albumList) { album ->
+                        items(albums) { album ->
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(8.dp)
-                                    .clickable { /* Navigate to album details */ }
+                                    .clickable {
+                                        // Điều hướng tới màn hình chi tiết album
+                                        navController.navigate("display_photo_in_album/${album.first}")
+                                    }
                             ) {
                                 AlbumItemListView(
-                                    album,
-                                    0
+                                    albumName = album.first,
+                                    photoCount = album.second.size,
                                 ) // Chỉnh sửa để thêm số lượng ảnh thực tế
                             }
                         }
@@ -277,19 +294,19 @@ fun SecretPhotoViewScreen(onBackPressed:()->Unit) {
                         placeholder = {
                             Text(
                                 text = "Folder Name",
-                                color = Color.Black// Màu chữ placeholder khi chưa nhập
+                                color = Color.Gray// Màu chữ placeholder khi chưa nhập
                             )
                         },
                         modifier= Modifier.fillMaxWidth(),
 
-                    )
+                        )
                 }
             },
             confirmButton = {
                 TextButton(
                     onClick = {
                         if(albumNameInput.isNotBlank()){// cái tên không rỗng
-                            albumList= albumList+albumNameInput
+                            Albums.addAlbum(albumNameInput, emptyList())
                             albumNameInput=""
                             showAlertDialog = false
                         }else{
