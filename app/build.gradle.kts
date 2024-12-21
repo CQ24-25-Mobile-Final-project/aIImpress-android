@@ -85,6 +85,25 @@ dependencies {
     implementation(libs.androidx.foundation.layout.android)
     implementation(libs.androidx.foundation.layout.android)
     implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.vision.common)
+    implementation(libs.play.services.mlkit.text.recognition.common)
+    implementation(libs.play.services.mlkit.text.recognition)
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.foundation.android)
+    implementation(libs.androidx.test.runner)
+    implementation(libs.play.services.auth)
+    implementation(libs.play.services.auth)
+    implementation(libs.play.services.auth)
+    implementation(libs.play.services.auth)
+    implementation(libs.play.services.auth)
+    implementation(libs.play.services.auth)
+    implementation(libs.androidx.foundation.android)
+    implementation(libs.androidx.foundation.android)
     val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)
     androidTestImplementation(composeBom)
@@ -168,4 +187,14 @@ dependencies {
 
     // https://mvnrepository.com/artifact/com.google.android.libraries.identity.googleid/googleid
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    implementation("com.vanniktech:android-image-cropper:4.5.0")
+
+    implementation ("com.burhanrashid52:photoeditor:3.0.2")
+    implementation ("com.google.android.gms:play-services-auth:19.0.0")
+    implementation("io.github.mr0xf00:easycrop:0.1.1")
+
+
+    implementation ("io.github.rroohit:ImageCropView:3.0.1")
+
+
 }

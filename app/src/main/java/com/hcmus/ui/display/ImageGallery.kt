@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
@@ -50,12 +51,9 @@ fun PhotoGalleryScreen(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(
-                top = with(LocalDensity.current) { LocalWindowInsets.current.statusBars.top.toDp() },
-                bottom = with(LocalDensity.current) { LocalWindowInsets.current.navigationBars.bottom.toDp() }
-            )
+
     ) {
-        GalleryTopBar()
+        GalleryTopBar(navController)
 
 
         SearchOrFilterBar(
@@ -304,3 +302,30 @@ fun getStoryItemsFromPhotos(categorizedPhotos: Map<String, List<Photo>>): List<S
         }
     }
 }
+@Preview(showBackground = true)
+@Composable
+fun PhotoGalleryScreenPreview() {
+    // Mock NavController for the preview
+    val mockNavController = NavController(LocalContext.current)
+
+    // Mock data for preview
+    val mockPhotos = mapOf(
+        "Today" to listOf(
+            Photo(uri = Uri.parse("file://mock/photo1.jpg"), date = Date(), label = "Today"),
+            Photo(uri = Uri.parse("file://mock/photo2.jpg"), date = Date(), label = "Today")
+        ),
+        "Yesterday" to listOf(
+            Photo(uri = Uri.parse("file://mock/photo3.jpg"), date = Date(), label = "Yesterday")
+        )
+    )
+
+    val mockStoryItems = listOf(
+        StoryItem(imageUri = Uri.parse("file://mock/story1.jpg"), label = "Story 1"),
+        StoryItem(imageUri = Uri.parse("file://mock/story2.jpg"), label = "Story 2")
+    )
+
+    MaterialTheme {
+        PhotoGalleryScreen(navController = mockNavController)
+    }
+}
+

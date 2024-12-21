@@ -71,7 +71,7 @@ fun MyAlbumScreen(navController: NavController) {
 
     Scaffold(
         topBar = {
-            GalleryTopBar()
+            GalleryTopBar(navController)
             MyTopAppBar(
                 title = "Albums",
                 titleLeftButton = "Back",

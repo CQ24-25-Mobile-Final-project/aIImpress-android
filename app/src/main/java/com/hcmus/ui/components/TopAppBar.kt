@@ -53,22 +53,16 @@ import com.hcmus.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GalleryTopBar() {
-    val insets = LocalWindowInsets.current
-    val topInset = with(LocalDensity.current) { insets.statusBars.top.toDp() }
-
+fun GalleryTopBar(navController: NavController) {
     TopAppBar(
-        modifier = Modifier
-            .padding(top = topInset), // Apply top inset for status bar
+        modifier = Modifier.fillMaxWidth(),
         title = {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Logo aligned left
                 Box(
-                    modifier = Modifier
-                        .height(56.dp),
+                    modifier = Modifier.height(56.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
@@ -77,7 +71,6 @@ fun GalleryTopBar() {
                         modifier = Modifier.height(20.dp)
                     )
                 }
-
                 Spacer(modifier = Modifier.weight(1f))
             }
         },
@@ -90,7 +83,7 @@ fun GalleryTopBar() {
                     modifier = Modifier.size(24.dp)
                 )
             }
-            IconButton(onClick = { }) {
+            IconButton(onClick = { navController.navigate("editUser") }) {
                 Box(
                     modifier = Modifier
                         .size(48.dp)
@@ -100,8 +93,7 @@ fun GalleryTopBar() {
                     Image(
                         painter = painterResource(id = R.drawable.avatar),
                         contentDescription = "User Profile",
-                        modifier = Modifier
-                            .fillMaxSize(),
+                        modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
                 }
@@ -109,6 +101,7 @@ fun GalleryTopBar() {
         }
     )
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyTopAppBar(

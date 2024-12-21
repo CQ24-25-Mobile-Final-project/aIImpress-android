@@ -63,7 +63,7 @@ fun SharedGalleryScreen(navController: NavController) {
             .background(Color(0xFFF9F8FC)) // Background color
     ) {
         // Reuse GalleryTopBar
-        GalleryTopBar()
+        GalleryTopBar(navController)
 
         // Content Section
         Column(
