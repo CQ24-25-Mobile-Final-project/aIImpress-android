@@ -36,7 +36,6 @@ import androidx.compose.foundation.clickable
 
 @Composable
 fun LoginScreen(
-  onLoginSuccess: () -> Unit,
   onLoginEmail: (email: String, password: String) -> Unit,
   onSignIn: () -> Unit,
   onLoginGoogle: () -> Unit
@@ -64,14 +63,6 @@ fun LoginScreen(
           color = BluePrimary,
           fontSize = 28.sp
         )
-      )
-      Text(
-        text = "Only Wallpaper app you will ever need ...!",
-        style = TextStyle(
-          color = Color.Gray,
-          fontSize = 14.sp
-        ),
-        modifier = Modifier.padding(top = 8.dp)
       )
     }
 
@@ -121,15 +112,6 @@ fun LoginScreen(
         color = Color.White,
         onClick = onLoginGoogle
       )
-
-      Spacer(modifier = Modifier.height(16.dp))
-
-      SignInButton(
-        text = "Continue With Facebook",
-        color = Color(0xFF4267B2),
-        icon = Icons.Default.AccountBox,
-        onClick = onLoginSuccess
-      )
     }
 
     Spacer(modifier = Modifier.height(16.dp))
@@ -145,7 +127,7 @@ fun LoginScreen(
             color = Color.Gray
         )
         Text(
-            text = "Sign In",
+            text = "Sign Up",
             color = BluePrimary,
             modifier = Modifier.clickable { onSignIn() },
             style = TextStyle(
@@ -189,6 +171,6 @@ fun SignInButton(
 @Composable
 private fun DefaultPreview() {
   MyApplicationTheme {
-    LoginScreen({}, {} as (String, String) -> Unit, {}, {})
+    LoginScreen({} as (String, String) -> Unit, {}, {})
   }
 }

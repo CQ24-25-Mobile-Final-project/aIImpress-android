@@ -166,4 +166,9 @@ dependencies {
 
     // https://mvnrepository.com/artifact/com.google.android.libraries.identity.googleid/googleid
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+
+    implementation("com.google.firebase:firebase-storage")
+    implementation("com.google.firebase:firebase-firestore")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
 }

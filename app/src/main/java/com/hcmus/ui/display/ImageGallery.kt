@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.insets.LocalWindowInsets
 import com.hcmus.R
@@ -93,6 +94,7 @@ fun PhotoGalleryScreen(navController: NavController) {
                         horizontalArrangement = Arrangement.spacedBy(2.dp),
                     ) {
                         rowPhotos.forEach { photo ->
+
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
@@ -102,10 +104,10 @@ fun PhotoGalleryScreen(navController: NavController) {
                                         navController.navigate("imageDetail/${Uri.encode(photo.uri.toString())}")
                                     }
                             ) {
-                                Image(
-                                    painter = rememberAsyncImagePainter(photo.uri),
-                                    contentDescription = null,
+                                AsyncImage(
+                                    model = photo.uri,
                                     modifier = Modifier.fillMaxSize(),
+                                    contentDescription = null,
                                     contentScale = ContentScale.Crop
                                 )
                             }
@@ -288,7 +290,7 @@ fun categorizePhotos(photos: Map<String, List<MediaFile>>): Map<String, List<Pho
 
             // Add the photo to the categorized list
             categorizedPhotos.computeIfAbsent(category) { mutableListOf() }
-                .add(Photo(uri = mediaFile.uri, date = photoDate, label =category))
+                .add(Photo(uri = mediaFile.url ?: mediaFile.uri, date = photoDate, label =category))
         }
     }
 
