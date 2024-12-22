@@ -24,8 +24,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -51,6 +53,9 @@ import com.hcmus.ui.secret.SecretPhotoViewScreen
 import com.hcmus.ui.story.SharedGalleryScreen
 import com.hcmus.auth.AuthResponse
 import com.hcmus.auth.AuthenticationManager
+import com.hcmus.data.CloudFirestoreService
+import com.hcmus.data.ContextStore
+import com.hcmus.data.model.User
 import com.hcmus.ui.screens.LoginScreen
 import com.hcmus.ui.screens.SignInScreen
 import com.hcmus.ui.secret.CreatePinScreen
@@ -81,50 +86,56 @@ fun MainNavigation(navController: NavHostController) {
     AuthenticationManager(context)
   }
   val coroutineScope = rememberCoroutineScope()
+  val cloudFirestore = CloudFirestoreService()
+  var isLoggedIn by remember { mutableStateOf(false) }
 
   // Load categorized photos when the navigation starts
   LaunchedEffect(Unit) {
-    photoGalleryViewModel.fetchCategorizedPhotos(context)
+    if (isLoggedIn) {
+      photoGalleryViewModel.fetchCategorizedPhotos(context)
+    }
   }
 
   val categorizedPhotos by photoGalleryViewModel.categorizedPhotos.collectAsState()
   NavHost(navController = navController, startDestination = "login") {
     composable("login") {
-      LoginScreen(onLoginSuccess = {
-        navController.navigate("gallery") {
-          popUpTo("login") { inclusive = true }
-        }
-      }, onLoginEmail = { email, password ->
-        authManager.loginWithEmail(email, password).onEach { response ->
-          if (response is AuthResponse.Success) {
-            Log.d("Login", "Success: $response")
-            Toast.makeText(context, "Login Success", Toast.LENGTH_SHORT).show()
-            navController.navigate("gallery") {
-              popUpTo("login") { inclusive = true }
+      LoginScreen(
+        onLoginEmail = { email, password ->
+          authManager.loginWithEmail(email, password).onEach { response ->
+            if (response is AuthResponse.Success) {
+              Log.d("Login", "Success: $response")
+              Toast.makeText(context, "Login Success", Toast.LENGTH_SHORT).show()
+              navController.navigate("gallery") {
+                popUpTo("login") { inclusive = true }
+              }
+              isLoggedIn = true
+              ContextStore.set(context, "email", email)
+            } else {
+              Log.d("Login", "Error: $response")
+              Toast.makeText(context, "Login Failed", Toast.LENGTH_SHORT).show()
             }
-          } else {
-            Log.d("Login", "Error: $response")
-            Toast.makeText(context, "Login Failed", Toast.LENGTH_SHORT).show()
+          }.launchIn(coroutineScope)
+        },
+        onSignIn = {
+          navController.navigate("signIn") {
+            popUpTo("login") { inclusive = true }
           }
-        }.launchIn(coroutineScope)
-      }, onSignIn = {
-        navController.navigate("signIn") {
-          popUpTo("login") { inclusive = true }
-        }
-      }, onLoginGoogle = {
-        authManager.signInWithGoogle().onEach { response ->
-          if (response is AuthResponse.Success) {
-            Log.d("Login", "Success: $response")
-            Toast.makeText(context, "Login Success", Toast.LENGTH_SHORT).show()
-            navController.navigate("gallery") {
-              popUpTo("login") { inclusive = true }
+        },
+        onLoginGoogle = {
+          authManager.signInWithGoogle().onEach { response ->
+            if (response is AuthResponse.Success) {
+              Log.d("Login", "Success: $response")
+              Toast.makeText(context, "Login Success", Toast.LENGTH_SHORT).show()
+              navController.navigate("gallery") {
+                popUpTo("login") { inclusive = true }
+              }
+            } else {
+              Log.d("Login", "Error: $response")
+              Toast.makeText(context, "Login Failed", Toast.LENGTH_SHORT).show()
             }
-          } else {
-            Log.d("Login", "Error: $response")
-            Toast.makeText(context, "Login Failed", Toast.LENGTH_SHORT).show()
-          }
-        }.launchIn(coroutineScope)
-      })
+          }.launchIn(coroutineScope)
+        }
+      )
     }
 
     composable("signIn") {
@@ -138,6 +149,11 @@ fun MainNavigation(navController: NavHostController) {
                 is AuthResponse.Success -> {
                   Log.d("Login", "Account creation successful")
                   Toast.makeText(context, "Account created successfully", Toast.LENGTH_SHORT).show()
+
+                  cloudFirestore.db
+                    .document(email)
+                    .set(User(email = email))
+
                   navController.navigate("login")
                 }
 
@@ -225,7 +241,7 @@ fun MainNavigation(navController: NavHostController) {
       }
     }
 
-    composable("create_pin"){ CreatePinScreen(navController) }
+    composable("create_pin") { CreatePinScreen(navController) }
 
 //
   }
