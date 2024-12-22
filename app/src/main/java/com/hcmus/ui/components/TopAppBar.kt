@@ -46,6 +46,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import androidx.navigation.NavController
 import com.google.accompanist.insets.LocalWindowInsets
@@ -53,10 +54,13 @@ import com.hcmus.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GalleryTopBar() {
+fun GalleryTopBar(
+    onActionClick: () -> Unit,
+    title: String
+) {
     val insets = LocalWindowInsets.current
     val topInset = with(LocalDensity.current) { insets.statusBars.top.toDp() }
-
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     TopAppBar(
         modifier = Modifier
             .padding(top = topInset), // Apply top inset for status bar
@@ -79,10 +83,18 @@ fun GalleryTopBar() {
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
+
+                Text(
+                    text = title,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 26.sp
+                )
             }
         },
         actions = {
-            IconButton(onClick = { }) {
+            IconButton(onClick = { onActionClick() }) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Add Icon",
@@ -106,7 +118,8 @@ fun GalleryTopBar() {
                     )
                 }
             }
-        }
+        },
+        scrollBehavior = scrollBehavior
     )
 }
 @OptIn(ExperimentalMaterial3Api::class)
@@ -130,7 +143,8 @@ fun MyTopAppBar(
                 text = title,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.headlineLarge
+                color = MaterialTheme.colorScheme.primary,
+                fontSize = 26.sp
             )
         },
         navigationIcon = {

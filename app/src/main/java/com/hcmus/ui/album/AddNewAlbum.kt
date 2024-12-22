@@ -31,17 +31,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.rememberNavController
 import com.hcmus.ui.components.GalleryTopBar
 import com.hcmus.ui.components.MyTopAppBar
 
-
 @Composable
 fun AddNewAlbum(navController: NavController) {
-    var albumName by remember{ mutableStateOf("") }
+    val albumViewModel: AlbumViewModel = hiltViewModel()
+    var albumName by remember { mutableStateOf("") }
     Scaffold(
         topBar = {
-            GalleryTopBar()
+            GalleryTopBar(onActionClick = {}, title = "")
             MyTopAppBar(
                 title = "",
                 titleLeftButton = "Albums",
@@ -77,10 +80,6 @@ fun AddNewAlbum(navController: NavController) {
                     .padding(8.dp)
                     .clip(RoundedCornerShape(12.dp)),
                 singleLine = true,
-//                colors = textFieldColors(
-//                    focusedIndicatorColor = Color.Transparent, // No underline when focused
-//                    unfocusedIndicatorColor = Color.Transparent, // No underline when not focused
-//                )
             )
             Spacer(modifier = Modifier.height(250.dp))
             Column(
@@ -123,7 +122,9 @@ fun AddNewAlbum(navController: NavController) {
                         .height(90.dp)
                         .clickable {
                             try {
-                                AlbumRepository.addAlbumName(albumName)
+                                Log.d("test", "Album Name: $albumName - Đang chuyển sang SelectImageForAlbum")
+                                albumViewModel.addAlbumName(albumName)
+                                Log.d("test", "Chuyển thành công sang SelectImageForAlbum")
                                 navController.navigate("SelectImageForAlbum")
                             } catch (e: Exception) {
                                 Log.e("Navigation Error", e.message.toString())
@@ -148,4 +149,12 @@ fun AddNewAlbum(navController: NavController) {
             }
         }
     }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun AddNewAlbumPreview() {
+    val mockNavController = rememberNavController()
+    AddNewAlbum(navController = mockNavController)
 }
