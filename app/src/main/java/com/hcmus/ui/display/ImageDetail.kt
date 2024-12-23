@@ -1,6 +1,7 @@
 package com.hcmus.ui.display
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,21 +23,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.hcmus.R
+import com.hcmus.data.FavoritesManager
+import com.hcmus.ui.album.AlbumViewModel
 import showMoreOptions
 
 // Image Detail Screen
 @Composable
 fun ImageDetailScreen(photoUri: String, navController: NavController) {
+    Log.d("ImageGalleryScreen", "Calling SmartAlbumOrganizer with URI: $photoUri")
+
     val decodedUri = Uri.decode(photoUri)
+    val albumViewModel: AlbumViewModel = hiltViewModel()
     Column(
         modifier = Modifier
             .fillMaxSize()
     ) {
         // Top bar
-        DetailTopBar(navController)
+        DetailTopBar(navController, photoUri = photoUri, albumViewModel)
 
         // Display the image
         Image(
@@ -56,8 +63,13 @@ fun ImageDetailScreen(photoUri: String, navController: NavController) {
 // TopBar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailTopBar(navController: NavController) {
+fun DetailTopBar(navController: NavController, photoUri: String, albumViewModel: AlbumViewModel) {
     val isHeartPressed = remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    val isFavorite = albumViewModel.albums.value?.any { it.first == "Favorite" && it.second.contains(Uri.parse(photoUri)) } == true
+    isHeartPressed.value = isFavorite
+
     TopAppBar(
         title = {
             Row(
@@ -100,6 +112,11 @@ fun DetailTopBar(navController: NavController) {
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() }
                         ) {
+                            if (isHeartPressed.value) {
+                                albumViewModel.deletePhotoInAlbum("Favorite", Uri.parse(photoUri))
+                            } else {
+                                albumViewModel.addToFavorite(Uri.parse(photoUri))
+                            }
                             isHeartPressed.value = !isHeartPressed.value
                         },
                     tint = if (isHeartPressed.value) Color.Red else Color.Gray

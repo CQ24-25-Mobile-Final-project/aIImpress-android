@@ -5,6 +5,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import android.net.Uri
 import android.util.Log
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 
 class AlbumViewModel : ViewModel() {
     private val _albums = MutableLiveData<List<Pair<String, List<Uri>>>>()
@@ -20,6 +22,7 @@ class AlbumViewModel : ViewModel() {
 
     init {
         _albums.value = albumRepository.albums
+        AlbumRepository.createDefaultFavoriteAlbum()
     }
 
     fun selectAlbum(name: String) {
@@ -62,5 +65,9 @@ class AlbumViewModel : ViewModel() {
     // Sort albums by the number of photos
     fun sortAlbumsByPhotoCount() {
         _albums.value = albumRepository.sortAlbumsByPhotoCount()
+    }
+
+    fun addToFavorite(photoUri: Uri) {
+        insertIntoAlbum("Favorite", listOf(photoUri))
     }
 }
