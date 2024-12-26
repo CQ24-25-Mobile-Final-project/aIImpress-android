@@ -1,9 +1,7 @@
 package com.hcmus.ui.secret
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,7 +9,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -33,20 +30,25 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.navigation.NavController
 import com.hcmus.R
-import com.hcmus.ui.album.AlbumRepository
-
+import androidx.compose.foundation.gestures.detectTapGestures
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun SecretPhotoViewScreen(navController: NavController) {
+fun SecretPhotoViewScreen(navController: NavController, onBackPressed: () -> Unit) {
     // danh sách các album
     var expanded by remember { mutableStateOf(false)}// kiểm soát trạng thái đóng mở của menu
     var showMenu by remember { mutableStateOf(false) }
     // câph nhật các biến trạng thái
     var showAlertDialog by remember { mutableStateOf(false) } // Trạng thái của AlertDialog
+    var showLongPressDialog by remember { mutableStateOf(false) }
+    var selectedAlbum by remember { mutableStateOf<Pair<String, List<Any>>?>(null) }
+    var renameAlbumInput by remember { mutableStateOf("") } // Biến lưu tên mới nhập vào
+    var showAlertDialogRename by remember{ mutableStateOf(false)}
+
     var albumNameInput by remember { mutableStateOf("") } // Biến lưu tên album nhập từ người dùng
 
     val menuItems = listOf("Create Folder", "Add Items", "Ascending(A-Z)", "Descending(Z-A)")
@@ -137,8 +139,11 @@ fun SecretPhotoViewScreen(navController: NavController) {
                                     expanded = false
                                     if (item == "Create Folder") {
                                         showAlertDialog = true
+                                    }else if(item =="Add Items"){
+                                        navController.navigate("select_photo_for_album")
                                     }
                                 }
+
                             )
                             // Nếu không phải mục cuối, thêm một đường phân cách (divider)
                             if (index < menuItems.size - 1) {
@@ -188,12 +193,19 @@ fun SecretPhotoViewScreen(navController: NavController) {
                         items(albums){ album ->
                             Box(
                                 modifier = Modifier
+                                    .pointerInput(Unit) {
+                                        detectTapGestures(
+                                            onLongPress = {
+                                                selectedAlbum = album // Lưu album được long press
+                                                showLongPressDialog = true // Hiển thị AlertDialog
+                                            },
+                                            onTap = {
+                                                navController.navigate("display_photo_in_album/${album.first}")
+                                            }
+                                        )
+                                    }
                                     .fillMaxSize()
                                     .padding(8.dp)
-                                    .clickable {
-                                        // Điều hướng tới màn hình chi tiết album
-                                        navController.navigate("display_photo_in_album/${album.first}")
-                                    }
                             ) {
                                 AlbumItemGridView(
                                     albumName = album.first,
@@ -209,12 +221,19 @@ fun SecretPhotoViewScreen(navController: NavController) {
                         items(albums) { album ->
                             Box(
                                 modifier = Modifier
+                                    .pointerInput(Unit) {
+                                        detectTapGestures(
+                                            onLongPress = {
+                                                selectedAlbum = album // Lưu album được long press
+                                                showLongPressDialog = true // Hiển thị AlertDialog
+                                            },
+                                            onTap = {
+                                                navController.navigate("display_photo_in_album/${album.first}")
+                                            }
+                                        )
+                                    }
                                     .fillMaxSize()
                                     .padding(8.dp)
-                                    .clickable {
-                                        // Điều hướng tới màn hình chi tiết album
-                                        navController.navigate("display_photo_in_album/${album.first}")
-                                    }
                             ) {
                                 AlbumItemListView(
                                     albumName = album.first,
@@ -272,6 +291,8 @@ fun SecretPhotoViewScreen(navController: NavController) {
 
                         if (item == "New Album") {
                             showAlertDialog = true
+                        }else if(item =="Import Photos"){
+                            navController.navigate("select_photo_for_album")
                         }
                     }
                 )
@@ -337,6 +358,119 @@ fun SecretPhotoViewScreen(navController: NavController) {
             },
             containerColor = Color.LightGray
 
+        )
+    }else if (showLongPressDialog) {
+        val isDefaultAlbum = selectedAlbum?.first == "DefaultVault" // Kiểm tra album có phải default không
+        AlertDialog(
+            onDismissRequest = { showLongPressDialog = false },
+            title = { Text("Album Options") },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally // Căn giữa nội dung
+                ) {
+                    Text(
+                        text = "Add Items",
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                navController.navigate("select_photo_for_album") // Điều hướng đến thêm ảnh
+                                showLongPressDialog = false // Đóng dialog
+                            }
+                            .padding(8.dp)
+                            .align(Alignment.CenterHorizontally)
+                    )
+                    // Chỉ hiển thị Rename và Delete nếu không phải album mặc định
+                    if (!isDefaultAlbum) {
+                        Text(
+
+                            text = "Rename",
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp,),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    renameAlbumInput = selectedAlbum?.first.orEmpty() // Gán tên album hiện tại
+                                    showLongPressDialog = false // Đóng dialog hiện tại
+                                    showAlertDialogRename = true // Hiển thị dialog đổi tên
+                                }
+                                .padding(8.dp)
+                                .align(Alignment.CenterHorizontally)
+                        )
+                        Text(
+                            text = "Delete",
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    // Xử lý delete album
+                                    Albums.deleteAlbum(selectedAlbum?.first.orEmpty())
+                                    showLongPressDialog = false // Đóng dialog
+                                }
+                                .padding(8.dp)
+                                .align(Alignment.CenterHorizontally)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showLongPressDialog = false }) {
+                    Text("Close")
+                }
+            },
+            containerColor = Color.LightGray
+        )
+    }else if (showAlertDialogRename) {
+        AlertDialog(
+            onDismissRequest = { showAlertDialogRename = false },
+            title = { Text("Rename Album") },
+            text = {
+                Column {
+                    TextField(
+                        value = renameAlbumInput,
+                        onValueChange = { renameAlbumInput = it },
+                        placeholder = {
+                            Text(
+                                text = "New Album Name",
+                                color = Color.Gray
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        // Kiểm tra tên mới hợp lệ và thực hiện đổi tên
+                        if (renameAlbumInput.isNotBlank() && selectedAlbum != null) {
+                            // Gọi phương thức đổi tên album
+                            Albums.renameAlbum(selectedAlbum!!.first, renameAlbumInput)
+
+                            // Cập nhật tên album trong danh sách
+                            selectedAlbum = selectedAlbum?.copy(first = renameAlbumInput)
+
+                            // Reset input và album sau khi đổi tên
+                            renameAlbumInput = "" // Reset input sau khi đổi tên
+                            showAlertDialogRename = false // Đóng dialog
+                        }
+                    }
+                ) {
+                    Text("Rename", style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        renameAlbumInput = "" // Reset input nếu hủy
+                        showAlertDialogRename = false
+                    }
+                ) {
+                    Text("Cancel", style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp))
+                }
+            },
+            containerColor = Color.LightGray
         )
     }
 }

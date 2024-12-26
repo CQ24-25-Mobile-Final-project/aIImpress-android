@@ -83,6 +83,7 @@ dependencies {
 
     implementation(libs.androidx.ui.text.google.fonts)
 	implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.androidx.foundation.android)
     val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)
     androidTestImplementation(composeBom)
@@ -172,4 +173,11 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+
+    // Hilt for Compose
+    implementation ("androidx.hilt:hilt-navigation-compose:1.0.0")
+
+    // Hilt core dependencies
+    implementation ("com.google.dagger:hilt-android:2.48")
+    kapt ("com.google.dagger:hilt-android-compiler:2.48")
 }
