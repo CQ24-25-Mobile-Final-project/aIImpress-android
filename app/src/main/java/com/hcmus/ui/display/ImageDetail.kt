@@ -1,5 +1,7 @@
 package com.hcmus.ui.display
 
+import android.content.ClipboardManager
+import android.content.Context
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -25,12 +27,18 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.hcmus.R
+import com.hcmus.ui.textrecognize.TextRecognitionResultBar
+import com.hcmus.ui.textrecognize.recognizeText
 import showMoreOptions
 
-// Image Detail Screen
+
 @Composable
 fun ImageDetailScreen(photoUri: String, navController: NavController) {
     val decodedUri = Uri.decode(photoUri)
+    val showResult = remember { mutableStateOf(false) }
+    val recognizedText = remember { mutableStateOf("") }
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -38,20 +46,74 @@ fun ImageDetailScreen(photoUri: String, navController: NavController) {
         // Top bar
         DetailTopBar(navController)
 
-        // Display the image
-        Image(
-            painter = rememberAsyncImagePainter(model = Uri.parse(photoUri)),
-            contentDescription = "Image Detail",
+        // Box to overlay button or text result on image
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
-            contentScale = ContentScale.Crop
-        )
+                .weight(1f)
+        ) {
+            // Display the image
+            Image(
+                painter = rememberAsyncImagePainter(model = Uri.parse(photoUri)),
+                contentDescription = "Image Detail",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+
+            if (!showResult.value) {
+                // Button overlay (only show when no result)
+                Button(
+                    onClick = {
+                        recognizeText(context, photoUri) { result ->
+                            recognizedText.value = result
+                            showResult.value = true // Show the result and hide the button
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray.copy(alpha = 0.5f)),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp)
+                ) {
+                    Text(text = "Copy text in image", color = Color.White)
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.Bottom
+                ) {
+                    // Button to copy text, placed above the TextRecognitionResultBar
+                    Button(
+                        onClick = {
+                            copyTextToClipboard(context, recognizedText.value)
+                        },
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally) // Center the button horizontally
+                            .padding(16.dp), // Add padding to give space around the button
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray.copy(alpha = 0.5f))
+                    ) {
+                        Text(text = "Copy Text", color = Color.White)
+                    }
+
+                    // Add space between the button and the result text
+                    Spacer(modifier = Modifier.height(1.dp)) // Adjust the height as needed
+
+                    // Display recognized text in the TextRecognitionResultBar
+                    TextRecognitionResultBar(
+                        showResult = showResult.value,
+                        recognizedText = recognizedText.value
+                    )
+                }
+
+            }
+
+        }
 
         // Bottom bar
         DetailBottomBar(navController = navController, photoUri = photoUri)
     }
 }
+
 
 // TopBar
 @OptIn(ExperimentalMaterial3Api::class)
@@ -199,4 +261,9 @@ fun BottomBarItem(
             modifier = Modifier.size(27.dp)
         )
     }
+}
+fun copyTextToClipboard(context: Context, text: String) {
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clip = android.content.ClipData.newPlainText("Recognized Text", text)
+    clipboard.setPrimaryClip(clip)
 }

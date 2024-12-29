@@ -49,30 +49,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import androidx.navigation.NavController
-import com.google.accompanist.insets.LocalWindowInsets
 import com.hcmus.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GalleryTopBar(
-    onActionClick: () -> Unit,
-    title: String
-) {
-    val insets = LocalWindowInsets.current
-    val topInset = with(LocalDensity.current) { insets.statusBars.top.toDp() }
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+fun GalleryTopBar(navController: NavController) {
     TopAppBar(
-        modifier = Modifier
-            .padding(top = topInset), // Apply top inset for status bar
+        modifier = Modifier.fillMaxWidth(),
         title = {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Logo aligned left
                 Box(
-                    modifier = Modifier
-                        .height(56.dp),
+                    modifier = Modifier.height(56.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
@@ -81,20 +71,11 @@ fun GalleryTopBar(
                         modifier = Modifier.height(20.dp)
                     )
                 }
-
                 Spacer(modifier = Modifier.weight(1f))
-
-                Text(
-                    text = title,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontSize = 26.sp
-                )
             }
         },
         actions = {
-            IconButton(onClick = { onActionClick() }) {
+            IconButton(onClick = { }) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Add Icon",
@@ -102,7 +83,7 @@ fun GalleryTopBar(
                     modifier = Modifier.size(24.dp)
                 )
             }
-            IconButton(onClick = { }) {
+            IconButton(onClick = { navController.navigate("editUser") }) {
                 Box(
                     modifier = Modifier
                         .size(48.dp)
@@ -112,102 +93,11 @@ fun GalleryTopBar(
                     Image(
                         painter = painterResource(id = R.drawable.avatar),
                         contentDescription = "User Profile",
-                        modifier = Modifier
-                            .fillMaxSize(),
+                        modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
                 }
             }
-        },
-        scrollBehavior = scrollBehavior
+        }
     )
 }
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun MyTopAppBar(
-    title: String,
-    titleLeftButton: String,
-    onNavigationClick: () -> Unit,
-    onActionClick: () -> Unit,
-    actionIcon: ImageVector,
-    menuItems: List<Pair<String, () -> Unit>>,
-) {
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-    val showMenu = remember { mutableStateOf(false) }
-    CenterAlignedTopAppBar(
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            titleContentColor = MaterialTheme.colorScheme.primary,
-        ),
-        title = {
-            Text(
-                text = title,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.primary,
-                fontSize = 26.sp
-            )
-        },
-        navigationIcon = {
-            IconButton(
-                onClick = { onNavigationClick() },
-                modifier = Modifier.width(100.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .clickable {onNavigationClick() },
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowLeft,
-                        contentDescription = "Back",
-                        modifier = Modifier.size(32.dp)
-                    )
-                    Text(
-                        text = titleLeftButton,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-        },
-        actions = {
-            IconButton(
-                onClick = {
-                    if (actionIcon == Icons.Default.MoreVert) {
-                        showMenu.value = !showMenu.value
-                    } else {
-                        onActionClick()
-                    }
-                },
-            ) {
-                Icon(
-                    imageVector = actionIcon,
-                    contentDescription = null
-                )
-            }
-            if (actionIcon == Icons.Default.MoreVert) {
-                DropdownMenu(
-                    modifier = Modifier.clip(RoundedCornerShape(12.dp)),
-                    expanded = showMenu.value,
-                    onDismissRequest = { showMenu.value = false },
-                    properties = PopupProperties(
-                        dismissOnClickOutside = true
-                    )
-                ) {
-                    menuItems.forEach { menuItem ->
-                        DropdownMenuItem(
-                            text = { Text(menuItem.first) },
-                            onClick = {
-                                menuItem.second() // Gọi hàm onClick của mục menu
-                                showMenu.value = false
-                            }
-                        )
-                    }
-                }
-            }
-        },
-        scrollBehavior = scrollBehavior,
-    )
-}
-
-

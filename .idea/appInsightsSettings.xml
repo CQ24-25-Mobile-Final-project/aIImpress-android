@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.hcmus" />
+                  <option name="mobileSdkAppId" value="1:679823525557:android:f0e4902366acbf531560fc" />
+                  <option name="projectId" value="mobile-final-552cd" />
+                  <option name="projectNumber" value="679823525557" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

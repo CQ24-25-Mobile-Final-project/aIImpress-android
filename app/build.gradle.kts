@@ -82,8 +82,20 @@ android {
 dependencies {
 
     implementation(libs.androidx.ui.text.google.fonts)
-	implementation(libs.androidx.foundation.layout.android)
+	  implementation(libs.androidx.foundation.layout.android)
     implementation(libs.androidx.foundation.android)
+    implementation(libs.vision.common)
+    implementation(libs.play.services.mlkit.text.recognition.common)
+    implementation(libs.play.services.mlkit.text.recognition)
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.foundation.android)
+    implementation(libs.androidx.test.runner)
+
+    implementation(libs.androidx.foundation.android)
+    implementation(libs.androidx.foundation.android)
+
+    implementation(libs.androidx.runtime.livedata)
+    implementation(libs.androidx.camera.core)
     val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)
     androidTestImplementation(composeBom)
@@ -146,23 +158,20 @@ dependencies {
 
     implementation("androidx.compose.runtime:runtime-livedata:1.5.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
-    implementation ("androidx.compose.ui:ui:1.4.0")
-    implementation ("androidx.compose.foundation:foundation:1.4.0")
-    implementation ("androidx.compose.material3:material3:1.0.0")
-    implementation ("androidx.navigation:navigation-compose:2.5.0")
-    implementation ("androidx.activity:activity-compose:1.7.0")
-    implementation ("com.google.accompanist:accompanist-insets:0.28.0")
+    implementation("androidx.compose.foundation:foundation:1.4.0")
+    implementation("androidx.navigation:navigation-compose:2.5.0")
+    implementation("androidx.activity:activity-compose:1.7.0")
+    implementation("com.google.accompanist:accompanist-insets:0.28.0")
     implementation("com.vanniktech:android-image-cropper:4.5.0")
     implementation("io.coil-kt:coil-compose:2.3.0")
-    implementation ("androidx.compose.foundation:foundation:1.5.0")// or the latest version available
-    implementation ("androidx.compose.ui:ui:1.5.0") // Make sure these are up to date
-    implementation ("androidx.compose.material3:material3:1.0.0")
-    implementation ("androidx.compose.ui:ui-text-google-fonts:1.5.0")
-    implementation ("androidx.compose.material:material-icons-extended:1.4.0")
-    implementation ("com.google.accompanist:accompanist-insets:0.23.1")
-    implementation ("androidx.compose.material:material-icons-core:1.4.0")
-    implementation ("androidx.exifinterface:exifinterface:1.3.6")
-
+    implementation("androidx.compose.foundation:foundation:1.5.0")// or the latest version available
+    implementation("androidx.compose.ui:ui:1.5.0") // Make sure these are up to date
+    implementation("androidx.compose.material3:material3:1.0.0")
+    implementation("androidx.compose.ui:ui-text-google-fonts:1.5.0")
+    implementation("androidx.compose.material:material-icons-extended:1.4.0")
+    implementation("com.google.accompanist:accompanist-insets:0.23.1")
+    implementation("androidx.compose.material:material-icons-core:1.4.0")
+    implementation("androidx.exifinterface:exifinterface:1.3.6")
 
     implementation("androidx.core:core-splashscreen:1.0.1")
 
@@ -175,9 +184,38 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
 
     // Hilt for Compose
-    implementation ("androidx.hilt:hilt-navigation-compose:1.0.0")
+    implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
 
     // Hilt core dependencies
-    implementation ("com.google.dagger:hilt-android:2.48")
-    kapt ("com.google.dagger:hilt-android-compiler:2.48")
+    implementation("com.google.dagger:hilt-android:2.48")
+    kapt("com.google.dagger:hilt-android-compiler:2.48")
+    implementation("com.vanniktech:android-image-cropper:4.5.0")
+
+    implementation("com.burhanrashid52:photoeditor:3.0.2")
+    implementation("com.google.android.gms:play-services-auth:19.0.0")
+    implementation("io.github.mr0xf00:easycrop:0.1.1")
+    implementation("io.insert-koin:koin-android:3.5.0")
+    implementation("io.insert-koin:koin-androidx-compose:3.5.0")
+    implementation("io.github.rroohit:ImageCropView:3.0.1")
+    implementation("io.insert-koin:koin-androidx-compose:3.3.0")
+
+    // Jetpack Compose
+    implementation("androidx.compose.ui:ui:1.5.0")
+    implementation("androidx.compose.material3:material3:1.1.0")
+    implementation("androidx.compose.runtime:runtime-livedata:1.5.0")
+
+    // AndroidX Lifecycle and LiveData
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.1")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
+
+    // Image decoding utilities
+    implementation("androidx.core:core-ktx:1.10.1")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+
+    // Kotlin standard library (for other utility functions)
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.20")
+    implementation("com.google.mlkit:segmentation-selfie:16.0.0-beta6")
 }
+
+
+

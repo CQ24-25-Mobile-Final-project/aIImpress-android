@@ -16,7 +16,6 @@
 
 package com.hcmus.ui
 
-import StoryUI
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
@@ -42,7 +41,6 @@ import com.hcmus.ui.album.ImagePickerScreen
 import com.hcmus.ui.album.MyAlbumScreen
 import com.hcmus.ui.album.SelectImageForAlbum
 import com.hcmus.ui.display.AppContent
-import com.hcmus.ui.display.EditImageScreen
 import com.hcmus.ui.display.ImageDetailScreen
 import com.hcmus.ui.display.MediaReader
 import com.hcmus.ui.display.Photo
@@ -63,6 +61,13 @@ import com.hcmus.ui.secret.CreatePinScreen
 import com.hcmus.ui.secret.DisplayPhotoInAlbumScreen
 import com.hcmus.ui.secret.SelectAlbumToAddPhoto
 import com.hcmus.ui.secret.SelectPhotoForAlbum
+import com.hcmus.ui.display.editimage.EditImageScreen
+import com.hcmus.ui.display.editimage.ImageSegmenter
+
+
+import com.hcmus.ui.edituser.EditProfileScreen
+import com.hcmus.ui.edituser.ProfileScreen
+import com.hcmus.ui.story.StoryUI
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -173,8 +178,13 @@ fun MainNavigation(navController: NavHostController) {
       )
     }
 
-    composable("gallery") { PhotoGalleryScreen(navController = navController) }
 
+    composable("remove_background_screen") {
+      ImageSegmenter(navController = navController)
+    }
+    composable("gallery") { PhotoGalleryScreen(navController = navController) }
+    composable("editUser") { ProfileScreen(navController = navController) }
+    composable("editProfile") { EditProfileScreen() }
     composable("authentication") { AuthenticationScreen(navController = navController) }
 
     composable("view") {

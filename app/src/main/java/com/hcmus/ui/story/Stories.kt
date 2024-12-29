@@ -1,3 +1,4 @@
+package com.hcmus.ui.story
 import android.net.Uri
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
