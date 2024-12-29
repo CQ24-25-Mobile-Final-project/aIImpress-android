@@ -302,30 +302,31 @@ fun getStoryItemsFromPhotos(categorizedPhotos: Map<String, List<Photo>>): List<S
         }
     }
 }
-@Preview(showBackground = true)
-@Composable
-fun PhotoGalleryScreenPreview() {
-    // Mock NavController for the preview
-    val mockNavController = NavController(LocalContext.current)
 
-    // Mock data for preview
-    val mockPhotos = mapOf(
-        "Today" to listOf(
-            Photo(uri = Uri.parse("file://mock/photo1.jpg"), date = Date(), label = "Today"),
-            Photo(uri = Uri.parse("file://mock/photo2.jpg"), date = Date(), label = "Today")
-        ),
-        "Yesterday" to listOf(
-            Photo(uri = Uri.parse("file://mock/photo3.jpg"), date = Date(), label = "Yesterday")
-        )
-    )
-
-    val mockStoryItems = listOf(
-        StoryItem(imageUri = Uri.parse("file://mock/story1.jpg"), label = "Story 1"),
-        StoryItem(imageUri = Uri.parse("file://mock/story2.jpg"), label = "Story 2")
-    )
-
-    MaterialTheme {
-        PhotoGalleryScreen(navController = mockNavController)
-    }
-}
+//
+//@Composable
+//fun PhotoGalleryScreenPreview() {
+//    // Mock NavController for the preview
+//    val mockNavController = NavController(LocalContext.current)
+//
+//    // Mock data for preview
+//    val mockPhotos = mapOf(
+//        "Today" to listOf(
+//            Photo(uri = Uri.parse("file://mock/photo1.jpg"), date = Date(), label = "Today"),
+//            Photo(uri = Uri.parse("file://mock/photo2.jpg"), date = Date(), label = "Today")
+//        ),
+//        "Yesterday" to listOf(
+//            Photo(uri = Uri.parse("file://mock/photo3.jpg"), date = Date(), label = "Yesterday")
+//        )
+//    )
+//
+//    val mockStoryItems = listOf(
+//        StoryItem(imageUri = Uri.parse("file://mock/story1.jpg"), label = "Story 1"),
+//        StoryItem(imageUri = Uri.parse("file://mock/story2.jpg"), label = "Story 2")
+//    )
+//
+//    MaterialTheme {
+//        PhotoGalleryScreen(navController = mockNavController)
+//    }
+//}
 

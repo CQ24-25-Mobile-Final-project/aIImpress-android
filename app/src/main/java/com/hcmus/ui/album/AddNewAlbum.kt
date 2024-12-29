@@ -44,7 +44,7 @@ fun AddNewAlbum(navController: NavController) {
     var albumName by remember { mutableStateOf("") }
     Scaffold(
         topBar = {
-            GalleryTopBar(onActionClick = {}, title = "")
+            GalleryTopBar(navController)
             MyTopAppBar(
                 title = "",
                 titleLeftButton = "Albums",

@@ -98,10 +98,11 @@ fun MyAlbumScreen(navController: NavController) {
     Scaffold(
         topBar = {
             GalleryTopBar(
-                onActionClick ={
+                navController,
+                onActionClick = {
                     showPopupAddNewAlbum =true
                 },
-                title = ""
+
             )
         },
         bottomBar = {

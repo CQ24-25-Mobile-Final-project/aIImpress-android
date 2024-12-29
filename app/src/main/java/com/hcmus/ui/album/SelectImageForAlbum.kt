@@ -75,7 +75,7 @@ fun SelectImageForAlbum(navController: NavController) {
 
     Scaffold(
         topBar = {
-            GalleryTopBar(onActionClick = {}, title = "")
+            GalleryTopBar(navController)
             MyTopAppBar(
                 title = "Add photos",
                 titleLeftButton = "Cancel",

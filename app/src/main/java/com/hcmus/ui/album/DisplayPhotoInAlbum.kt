@@ -88,7 +88,7 @@ fun DisplayPhotoInAlbum(navController: NavController) {
     }
     Scaffold (
         topBar = {
-            GalleryTopBar(onActionClick = {}, title = "")
+            GalleryTopBar(navController)
             MyTopAppBar(
                 title = "",
                 titleLeftButton = "Albums",
