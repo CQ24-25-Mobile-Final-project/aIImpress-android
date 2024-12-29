@@ -11,7 +11,19 @@ object AlbumRepository {
         get() = _albumName ?: throw IllegalStateException("Album name has not been initialized")
 
     fun addAlbum(name: String, photos: List<Uri>) {
-        _albums.add(name to photos)
+        val existingAlbumIndex = _albums.indexOfFirst { it.first == name }
+        if (existingAlbumIndex != -1) {
+            val updatedPhotos = _albums[existingAlbumIndex].second + photos
+            _albums[existingAlbumIndex] = name to updatedPhotos
+        } else {
+            _albums.add(name to photos)
+        }
+    }
+
+    fun createDefaultFavoriteAlbum() {
+        if (_albums.none { it.first == "Favorite" }) {
+            addAlbum("Favorite", emptyList())
+        }
     }
 
     fun selectedAlbum(name: String): List<Uri> {

@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,22 +22,21 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -48,40 +46,62 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.hcmus.R
 import com.hcmus.ui.components.CustomBottomBar
 import com.hcmus.ui.components.GalleryTopBar
-import com.hcmus.ui.components.MyTopAppBar
+import com.hcmus.utils.SmartAlbumOrganizer
 
+var flag = false
+var countOfImages = 0
 
 @Composable
 fun MyAlbumScreen(navController: NavController) {
     var isGridView by remember { mutableStateOf(true) }
     val albumViewModel: AlbumViewModel = hiltViewModel()
     val albums by albumViewModel.albums.observeAsState(emptyList())
+    var showPopupAddNewAlbum by remember { mutableStateOf(false) }
+    var NewAlbumName by remember { mutableStateOf("") }
 
     LaunchedEffect(albums) {
         Log.d("AlbumsLog", "Albums content: $albums")
+    }
+
+    val context = LocalContext.current
+    val photos = remember { mutableStateOf<List<Uri>>(emptyList()) }
+    photos.value = fetchImages(context)
+    if (photos.value.size != countOfImages) {
+        flag = false
+        countOfImages = photos.value.size
+    }
+    RequestMediaPermissions {
+        if (!flag) {
+            photos.value = fetchImages(context)
+
+            photos.value.forEach { uri ->
+                SmartAlbumOrganizer(uri.toString(), context, albumViewModel)
+            }
+
+            flag = true
+        }
     }
 
     Scaffold(
         topBar = {
             GalleryTopBar(
                 onActionClick ={
-                    navController.navigate("AddNewAlbum")
+                    showPopupAddNewAlbum =true
                 },
-                title = "Album"
+                title = ""
             )
         },
         bottomBar = {
@@ -143,7 +163,7 @@ fun MyAlbumScreen(navController: NavController) {
                                     }
                                 )
                         ) {
-                            AlbumItemGridView(name, photos.size, photos[0])
+                            AlbumItemGridView(name, photos.size, photos.getOrNull(0))
                         }
                     }
                 }
@@ -151,7 +171,7 @@ fun MyAlbumScreen(navController: NavController) {
                 LazyColumn(
                     modifier = Modifier.padding(0.dp, 8.dp, 4.dp, 8.dp)
                 ) {
-                    items(albums) { (name, photo) ->
+                    items(albums) { (name, photos) ->
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -167,15 +187,52 @@ fun MyAlbumScreen(navController: NavController) {
                                     }
                                 )
                         ) {
-                            AlbumItemListView(name, photo.size, photo[0])
+                            AlbumItemListView(name, photos.size, photos.getOrNull(0))
                         }
                     }
                 }
             }
         }
     }
-}
 
+    if (showPopupAddNewAlbum) {
+        AlertDialog(
+            onDismissRequest = { showPopupAddNewAlbum = false },
+            title = {
+                Text("Create New Album", style = MaterialTheme.typography.titleLarge)
+            },
+            text = {
+                Column {
+                    TextField(
+                        value = NewAlbumName,
+                        onValueChange = { NewAlbumName = it },
+                        label = { Text(text="Album name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (NewAlbumName.isNotBlank()) {
+                            showPopupAddNewAlbum = false
+                            albumViewModel.addAlbumName(NewAlbumName)
+                            navController.navigate("SelectImageForAlbum")
+                        }
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPopupAddNewAlbum = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+}
 
 @Composable
 fun AlbumItemListView(albumName: String, photoCount: Int, firstPhotoUri: Uri?) {
@@ -203,7 +260,7 @@ fun AlbumItemListView(albumName: String, photoCount: Int, firstPhotoUri: Uri?) {
         ) {
             Text(text = albumName,
                 style = MaterialTheme.typography.titleMedium)
-            Text(text = photoCount.toString() + if(photoCount == 1)  " photo" else " photos",
+            Text(text = photoCount.toString() + if(photoCount == 1 || photoCount == 0)  " photo" else " photos",
                 style = MaterialTheme.typography.bodySmall
             )
         }
@@ -240,21 +297,20 @@ fun AlbumItemGridView(albumName: String, photoCount: Int, firstPhotoUri: Uri?) {
             Text(text = albumName,
                 style = MaterialTheme.typography.titleMedium)
 
-            Text(text = photoCount.toString() + if(photoCount == 1)  " photo" else " photos",
+            Text(text = photoCount.toString() + if(photoCount == 1 || photoCount == 0)  " photo" else " photos",
                 style = MaterialTheme.typography.bodySmall
             )
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomSheetExample(albumViewModel: AlbumViewModel) {
-    var showBottomSheet by remember { mutableStateOf(false) }
+    var showPopup by remember { mutableStateOf(false) }
     var selectedOption by remember { mutableStateOf("Sort") }
 
     Button(
-        onClick = { showBottomSheet = true },
+        onClick = { showPopup = true },
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.secondary,
             contentColor = Color.Black // Màu chữ
@@ -265,63 +321,61 @@ fun BottomSheetExample(albumViewModel: AlbumViewModel) {
         Text(selectedOption)
     }
 
-    if (showBottomSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showBottomSheet = false }
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = "Sort by",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Divider()
-
-                CustomTransparentButton(
-                    text = "Last Modified",
-                    onClick = {
-                        selectedOption = "Last Modified"
-                        showBottomSheet = false
-                    }
-                )
-                CustomTransparentButton(
-                    text = "Most photos",
-                    onClick = {
-                        selectedOption = "Most photos"
-                        showBottomSheet = false
-                        albumViewModel.sortAlbumsByPhotoCount()
-                    }
-                )
-                CustomTransparentButton(
-                    text = "Album name",
-                    onClick = {
-                        selectedOption = "Album name"
-                        showBottomSheet = false
-                        albumViewModel.sortAlbumsByName()
-                    }
-                )
+    if (showPopup) {
+        AlertDialog(
+            onDismissRequest = { showPopup = false },
+            title = {
+                Text("Sort by", style = MaterialTheme.typography.titleLarge)
+            },
+            text = {
+                Column {
+                    RadioButtonOption(
+                        text = "Last Modified",
+                        selectedOption = selectedOption,
+                        onSelect = {
+                            selectedOption = "Last Modified"
+                            showPopup = false
+                        }
+                    )
+                    RadioButtonOption(
+                        text = "Most photos",
+                        selectedOption = selectedOption,
+                        onSelect = {
+                            selectedOption = "Most photos"
+                            showPopup = false
+                            albumViewModel.sortAlbumsByPhotoCount()
+                        }
+                    )
+                    RadioButtonOption(
+                        text = "Album name",
+                        selectedOption = selectedOption,
+                        onSelect = {
+                            selectedOption = "Album name"
+                            showPopup = false
+                            albumViewModel.sortAlbumsByName()
+                        }
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showPopup = false }) {
+                    Text("Cancel")
+                }
             }
-        }
+        )
     }
 }
 
 @Composable
-fun CustomTransparentButton(text: String, onClick: () -> Unit) {
-    Text(
-        text = text,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .background(Color.Transparent)
-            .padding(vertical = 12.dp),
-        style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.primary)
-    )
+fun RadioButtonOption(text: String, selectedOption: String, onSelect: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        RadioButton(
+            selected = selectedOption == text,
+            onClick = onSelect
+        )
+        Text(text = text, modifier = Modifier.padding(start = 8.dp))
+    }
 }
-
 
 @Preview(showBackground = true)
 @Composable
