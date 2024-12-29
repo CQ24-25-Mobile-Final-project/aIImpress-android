@@ -17,6 +17,7 @@
 package com.hcmus.ui
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.Composable
@@ -49,8 +50,10 @@ import com.hcmus.ui.secret.SecretPhotoViewScreen
 import com.hcmus.ui.story.SharedGalleryScreen
 import com.hcmus.auth.AuthResponse
 import com.hcmus.auth.AuthenticationManager
-import com.hcmus.ui.components.GalleryTopBar
 import com.hcmus.ui.display.editimage.EditImageScreen
+import com.hcmus.ui.display.editimage.ImageSegmenter
+
+
 import com.hcmus.ui.edituser.EditProfileScreen
 import com.hcmus.ui.edituser.ProfileScreen
 import com.hcmus.ui.screens.LoginScreen
@@ -154,6 +157,10 @@ fun MainNavigation(navController: NavHostController) {
       )
     }
 
+
+    composable("remove_background_screen") {
+      ImageSegmenter(navController = navController)
+    }
     composable("gallery") { PhotoGalleryScreen(navController = navController) }
     composable("editUser") { ProfileScreen(navController = navController) }
     composable("editProfile") { EditProfileScreen() }

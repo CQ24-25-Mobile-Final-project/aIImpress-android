@@ -26,6 +26,9 @@ import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import com.hcmus.ui.theme.MyApplicationTheme
 import androidx.core.app.ActivityCompat
+import com.hcmus.ui.display.editimage.appModule
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.GlobalContext.startKoin
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -33,7 +36,10 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-
+    startKoin {
+      androidContext(this@MainActivity)
+      modules(appModule)  // Add your Koin modules here
+    }
     // Request permissions dynamically based on Android version
     val permissions = if (Build.VERSION.SDK_INT >= 33) {
       arrayOf(Manifest.permission.READ_MEDIA_IMAGES)

@@ -104,6 +104,9 @@ dependencies {
     implementation(libs.play.services.auth)
     implementation(libs.androidx.foundation.android)
     implementation(libs.androidx.foundation.android)
+
+    implementation(libs.androidx.runtime.livedata)
+    implementation(libs.androidx.camera.core)
     val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)
     androidTestImplementation(composeBom)
@@ -192,9 +195,30 @@ dependencies {
     implementation ("com.burhanrashid52:photoeditor:3.0.2")
     implementation ("com.google.android.gms:play-services-auth:19.0.0")
     implementation("io.github.mr0xf00:easycrop:0.1.1")
-
-
+    implementation ("io.insert-koin:koin-android:3.5.0")
+    implementation ("io.insert-koin:koin-androidx-compose:3.5.0")
     implementation ("io.github.rroohit:ImageCropView:3.0.1")
+    implementation ("io.insert-koin:koin-androidx-compose:3.3.0")
+
+    // Jetpack Compose
+    implementation ("androidx.compose.ui:ui:1.5.0")
+    implementation ("androidx.compose.material3:material3:1.1.0")
+    implementation ("androidx.compose.runtime:runtime-livedata:1.5.0")
 
 
+
+    // AndroidX Lifecycle and LiveData
+    implementation ("androidx.lifecycle:lifecycle-livedata-ktx:2.6.1")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
+
+    // Image decoding utilities
+    implementation ("androidx.core:core-ktx:1.10.1")
+    implementation ("androidx.appcompat:appcompat:1.6.1")
+
+    // Kotlin standard library (for other utility functions)
+    implementation ("org.jetbrains.kotlin:kotlin-stdlib:1.8.20")
+    implementation ("com.google.mlkit:segmentation-selfie:16.0.0-beta6")
 }
+
+
+

@@ -13,6 +13,7 @@ import android.util.Log
 import android.view.ViewGroup
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -199,7 +200,7 @@ fun EditImageScreen(
         ) {
             items(
                 listOf(
-                    "Brush", "Text", "Eraser", "Filter", "Crop"
+                    "Brush", "Text", "Eraser", "Filter", "Crop", "Remove Background"
                 )
             ) { action ->
                 Button(
@@ -226,6 +227,10 @@ fun EditImageScreen(
                                 val cropOptions = CropImageContractOptions(uri, CropImageOptions())
                                 cropImageLauncher.launch(cropOptions)
                             }
+                            "Remove Background" -> {
+                                navController.navigate("remove_background_screen")
+                            }
+
                         }
                     },
                     modifier = Modifier
@@ -239,6 +244,7 @@ fun EditImageScreen(
                         "Eraser" -> Icon(Icons.Filled.Delete, contentDescription = "Eraser", tint = Color.White)
                         "Filter" -> Icon(Icons.Filled.Filter, contentDescription = "Filter", tint = Color.White)
                         "Crop" -> Icon(Icons.Filled.Crop, contentDescription = "Crop", tint = Color.White)
+                        "Remove Background" -> Icon(Icons.Filled.Delete, contentDescription = "Remove Background", tint = Color.White)
                     }
                 }
             }
@@ -322,7 +328,7 @@ fun EditImageScreen(
     }
 }
 
-private fun loadBitmapFromUri(context: Context, uri: Uri): Bitmap? {
+fun loadBitmapFromUri(context: Context, uri: Uri): Bitmap? {
     return try {
         val inputStream = context.contentResolver.openInputStream(uri)
         inputStream?.use { BitmapFactory.decodeStream(it) }
