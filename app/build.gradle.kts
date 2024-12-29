@@ -82,6 +82,7 @@ android {
 dependencies {
 
     implementation(libs.androidx.ui.text.google.fonts)
+    implementation(libs.androidx.camera.view)
 	  implementation(libs.androidx.foundation.layout.android)
     implementation(libs.androidx.foundation.android)
     implementation(libs.vision.common)
@@ -91,7 +92,6 @@ dependencies {
     implementation(libs.androidx.foundation.android)
     implementation(libs.androidx.test.runner)
 
-    implementation(libs.androidx.foundation.android)
     implementation(libs.androidx.foundation.android)
 
     implementation(libs.androidx.runtime.livedata)
@@ -173,6 +173,16 @@ dependencies {
     implementation("androidx.compose.material:material-icons-core:1.4.0")
     implementation("androidx.exifinterface:exifinterface:1.3.6")
 
+    implementation ("androidx.compose.foundation:foundation:1.5.0")// or the latest version available
+    implementation ("androidx.compose.ui:ui:1.5.0") // Make sure these are up to date
+    implementation ("androidx.compose.material3:material3:1.0.0")
+    implementation ("androidx.compose.ui:ui-text-google-fonts:1.5.0")
+    implementation ("androidx.compose.material:material-icons-extended:1.4.0")
+    implementation ("com.google.accompanist:accompanist-insets:0.23.1")
+    implementation ("androidx.compose.material:material-icons-core:1.4.0")
+    implementation ("androidx.exifinterface:exifinterface:1.3.6")
+
+
     implementation("androidx.core:core-splashscreen:1.0.1")
 
     // https://mvnrepository.com/artifact/com.google.android.libraries.identity.googleid/googleid
@@ -215,6 +225,13 @@ dependencies {
     // Kotlin standard library (for other utility functions)
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.20")
     implementation("com.google.mlkit:segmentation-selfie:16.0.0-beta6")
+    implementation ("com.google.maps.android:maps-compose:2.13.0")
+    implementation ("com.google.android.gms:play-services-maps:18.1.0")
+    implementation ("com.google.android.gms:play-services-auth:20.7.0")
+
+
+
+
 }
 
 

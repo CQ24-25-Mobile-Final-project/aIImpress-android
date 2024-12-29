@@ -30,6 +30,7 @@ playServicesAuth = "19.0.0"
 segmentationSelfie = "16.0.0-beta6"
 runtimeLivedata = "1.7.6"
 cameraCore = "1.4.1"
+cameraView = "1.4.1"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
@@ -74,6 +75,7 @@ play-services-auth = { group = "com.google.android.gms", name = "play-services-a
 segmentation-selfie = { group = "com.google.mlkit", name = "segmentation-selfie", version.ref = "segmentationSelfie" }
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
 androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "cameraCore" }
+androidx-camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "cameraView" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
