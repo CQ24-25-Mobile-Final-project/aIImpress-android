@@ -58,11 +58,16 @@ import com.hcmus.data.ContextStore
 import com.hcmus.data.model.User
 import com.hcmus.ui.screens.LoginScreen
 import com.hcmus.ui.screens.SignInScreen
+import com.hcmus.ui.secret.AlbumModel
 import com.hcmus.ui.secret.CreatePinScreen
+import com.hcmus.ui.secret.DisplayPhotoInAlbumScreen
+import com.hcmus.ui.secret.SelectAlbumToAddPhoto
+import com.hcmus.ui.secret.SelectPhotoForAlbum
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+
 
 class PhotoGalleryViewModel : ViewModel() {
   private val _categorizedPhotos = MutableStateFlow<Map<String, List<Photo>>>(emptyMap())
@@ -174,9 +179,41 @@ fun MainNavigation(navController: NavHostController) {
 
     composable("view") {
       SecretPhotoViewScreen(
-        navController = navController
+        navController = navController,
+        onBackPressed = {
+          navController.navigate("") {
+            popUpTo("gallery") { inclusive = true }
+          }
+        }
       )
     }
+    composable("display_photo_in_album/{albumName}") { backStackEntry ->
+      val albumName = backStackEntry.arguments?.getString("albumName")
+      if (albumName != null) {
+        DisplayPhotoInAlbumScreen(navController,albumName = albumName)
+      }
+    }
+
+      composable("select_photo_for_album") {
+        val albumModel: AlbumModel = hiltViewModel() // Gọi hiltViewModel() bên trong hàm @Composable
+        SelectPhotoForAlbum(
+          navController = navController,
+          albumModel = albumModel
+        )
+      }
+    composable("select_album_to_add_photo") {
+      val albumModel: AlbumModel = hiltViewModel() // Gọi hiltViewModel() bên trong hàm @Composable
+      val selectedPhotos = albumModel.selectedPhotos // Lấy danh sách ảnh được chọn từ albumModel
+
+      SelectAlbumToAddPhoto(
+        navController = navController,
+        albumModel = albumModel,
+        selectedPhotos = selectedPhotos // Truyền selectedPhotos vào đây
+      )
+    }
+
+
+
 
     composable(
       route = "imageDetail/{photoUri}",
