@@ -31,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -56,6 +57,11 @@ import com.hcmus.auth.AuthenticationManager
 import com.hcmus.data.CloudFirestoreService
 import com.hcmus.data.ContextStore
 import com.hcmus.data.model.User
+import com.hcmus.ui.display.ImageDescriptionScreen
+import com.hcmus.ui.display.MapPhotoView
+
+
+import com.hcmus.ui.display.getAllPhotoPaths
 import com.hcmus.ui.screens.LoginScreen
 import com.hcmus.ui.screens.SignInScreen
 import com.hcmus.ui.secret.CreatePinScreen
@@ -167,6 +173,17 @@ fun MainNavigation(navController: NavHostController) {
         }
       )
     }
+    composable("photo_map") {
+      val context = LocalContext.current
+      val photoUris = getAllPhotoPaths(context)
+      MapPhotoView(photos = photoUris) // Assuming URIs are passed as photo data
+    }
+    composable("imageDescription/{photoUri}") { backStackEntry ->
+      val photoUri = backStackEntry.arguments?.getString("photoUri") ?: ""
+      ImageDescriptionScreen(photoUri = photoUri, viewModel = viewModel(), navController = navController)
+    }
+
+
 
     composable("gallery") { PhotoGalleryScreen(navController = navController) }
 

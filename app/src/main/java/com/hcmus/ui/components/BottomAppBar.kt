@@ -90,6 +90,7 @@ fun CustomBottomBar(
                 contentDescription = "Profile",
                 onClick = {
                     onTabSelected(3)
+                    navController.navigate("photo_map")
                 }
             )
         }

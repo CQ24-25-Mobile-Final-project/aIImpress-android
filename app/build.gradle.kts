@@ -83,6 +83,7 @@ dependencies {
 
     implementation(libs.androidx.ui.text.google.fonts)
 	implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.androidx.camera.view)
     val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)
     androidTestImplementation(composeBom)
@@ -152,7 +153,7 @@ dependencies {
     implementation ("androidx.activity:activity-compose:1.7.0")
     implementation ("com.google.accompanist:accompanist-insets:0.28.0")
     implementation("com.vanniktech:android-image-cropper:4.5.0")
-    implementation("io.coil-kt:coil-compose:2.3.0")
+
     implementation ("androidx.compose.foundation:foundation:1.5.0")// or the latest version available
     implementation ("androidx.compose.ui:ui:1.5.0") // Make sure these are up to date
     implementation ("androidx.compose.material3:material3:1.0.0")
@@ -172,4 +173,11 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+    implementation ("com.google.maps.android:maps-compose:2.13.0")
+    implementation ("com.google.android.gms:play-services-maps:18.1.0")
+    implementation ("com.google.android.gms:play-services-auth:20.7.0")
+
+
+
+
 }

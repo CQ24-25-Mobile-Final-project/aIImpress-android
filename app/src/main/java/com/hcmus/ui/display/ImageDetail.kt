@@ -169,6 +169,16 @@ fun DetailBottomBar(navController: NavController, photoUri: String) {
                 showDialog.value = true },
 
         )
+        BottomBarItem(
+            isSelected = selectedItem.value == 5,
+            iconRes = R.drawable.menu_icon,
+            contentDescription = "More Icon",
+            onClick = {
+                selectedItem.value = 5
+                navController.navigate("imageDescription/${Uri.encode(photoUri)}")
+                },
+
+            )
     }
     if (showDialog.value) {
         showMoreOptions(navController, photoUri, context = LocalContext.current)
