@@ -1,6 +1,6 @@
 package com.hcmus.data
 
-import com.example.aiimagegenerator.presentation.MainViewModel
+import com.hcmus.presentation.AiGenerateImageViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 import retrofit2.Retrofit
@@ -16,7 +16,7 @@ val appModule = module {
     }
 
     viewModel {
-        MainViewModel(get())
+        AiGenerateImageViewModel(get())
     }
 
     single<ImageRepository> { ImageRepositoryImpl(get()) }

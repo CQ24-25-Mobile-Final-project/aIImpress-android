@@ -1,14 +1,8 @@
-package com.example.aiimagegenerator.presentation
+package com.hcmus.presentation
 
-import android.content.ContentValues
-import android.content.Context
-import android.graphics.Bitmap
-import android.os.Build
-import android.provider.MediaStore
 import android.util.Log
 import com.example.aiimagegenerator.domain.Constants
 
-import androidx.annotation.RequiresExtension
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hcmus.data.ImageRepository
@@ -18,16 +12,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 
-class MainViewModel(private val repository: ImageRepository) : ViewModel() {
-
+class AiGenerateImageViewModel(private val repository: ImageRepository) : ViewModel() {
     private val _imageBase64 = MutableStateFlow<String?>(null)
     val imageBase64: StateFlow<String?> = _imageBase64
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
-
-
-
 
     fun generateImage(prompt: String) {
         viewModelScope.launch {
@@ -48,7 +38,4 @@ class MainViewModel(private val repository: ImageRepository) : ViewModel() {
     fun setError(message: String) {
         _error.value = message
     }
-
-
-
 }

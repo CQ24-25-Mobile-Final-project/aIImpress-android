@@ -41,10 +41,10 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-        ndk {
-            // On Apple silicon, you can omit x86_64.
-            abiFilters += listOf("arm64-v8a", "x86_64")
-        }
+//        ndk {
+//            // On Apple silicon, you can omit x86_64.
+//            abiFilters += listOf("arm64-v8a", "x86_64")
+//        }
         // Enable room auto-migrations
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
@@ -80,13 +80,13 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-    android {
-        flavorDimensions += "pyVersion"
-        productFlavors {
-            create("py310") { dimension = "pyVersion" }
-            create("py311") { dimension = "pyVersion" }
-        }
-    }
+//    android {
+//        flavorDimensions += "pyVersion"
+//        productFlavors {
+//            create("py310") { dimension = "pyVersion" }
+//            create("py311") { dimension = "pyVersion" }
+//        }
+//    }
 
 }
 

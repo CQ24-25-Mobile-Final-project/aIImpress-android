@@ -20,7 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import androidx.core.app.ActivityCompat
-import com.example.aiimagegenerator.presentation.MainViewModel
+import com.hcmus.presentation.AiGenerateImageViewModel
 import com.hcmus.data.appModule
 import com.hcmus.ui.theme.MyApplicationTheme
 import com.hcmus.ui.theme.AiImageGeneratorTheme
@@ -33,7 +33,7 @@ import org.koin.core.context.GlobalContext.startKoin
 class MainActivity : ComponentActivity() {
 
   // ViewModel được khởi tạo bởi Koin
-  val viewModel: MainViewModel by viewModel()
+  val viewModel: AiGenerateImageViewModel by viewModel()
 
   @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
   @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)

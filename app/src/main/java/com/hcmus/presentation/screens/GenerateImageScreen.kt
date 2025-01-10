@@ -18,11 +18,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.aiimagegenerator.domain.Screen
-import com.example.aiimagegenerator.presentation.MainViewModel
-import kotlinx.coroutines.delay
+import com.hcmus.presentation.AiGenerateImageViewModel
 
 @Composable
-fun HomeScreen(viewModel: MainViewModel, navController: NavHostController) {
+fun GenerateImageScreen(viewModel: AiGenerateImageViewModel, navController: NavHostController) {
     var prompt by remember { mutableStateOf("") }
 
     Column(
@@ -37,8 +36,6 @@ fun HomeScreen(viewModel: MainViewModel, navController: NavHostController) {
 
         Button(onClick = {
             viewModel.generateImage(prompt)
-
-
             navController.navigate(Screen.LoadingScreen.route)
         }) {
             Text(text = "Generate")

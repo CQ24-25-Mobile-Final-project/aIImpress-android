@@ -11,10 +11,10 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import com.example.aiimagegenerator.domain.Constants
 import com.example.aiimagegenerator.domain.Screen
-import com.example.aiimagegenerator.presentation.MainViewModel
+import com.hcmus.presentation.AiGenerateImageViewModel
 
 @Composable
-fun LoadingScreen(viewModel: MainViewModel, navController: NavHostController) {
+fun LoadingScreen(viewModel: AiGenerateImageViewModel, navController: NavHostController) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator()
         val imageString by viewModel.imageBase64.collectAsState()
