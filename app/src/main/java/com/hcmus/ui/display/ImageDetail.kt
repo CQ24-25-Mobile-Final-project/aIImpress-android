@@ -26,14 +26,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.hcmus.R
 import com.hcmus.ui.textrecognize.TextRecognitionResultBar
 import com.hcmus.ui.textrecognize.recognizeText
-import com.hcmus.data.FavoritesManager
 import com.hcmus.ui.album.AlbumViewModel
+import com.hcmus.ui.components.MediaFileManager
+import com.hcmus.ui.components.getPhotoDetail
 import showMoreOptions
+import com.hcmus.ui.components.addTag1 as addTag1
 
 
 @Composable
@@ -46,12 +49,16 @@ fun ImageDetailScreen(photoUri: String, navController: NavController) {
     val context = LocalContext.current
 
     val albumViewModel: AlbumViewModel = hiltViewModel()
+    val photoViewModel: PhotoViewModel = viewModel(
+        factory = PhotoViewModelFactory(context)
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
     ) {
         // Top bar
-        DetailTopBar(navController, photoUri = photoUri, albumViewModel)
+        DetailTopBar(navController, photoUri = photoUri, albumViewModel, photoViewModel)
 
         // Box to overlay button or text result on image
         Box(
@@ -66,6 +73,7 @@ fun ImageDetailScreen(photoUri: String, navController: NavController) {
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
+
 
             if (!showResult.value) {
                 // Button overlay (only show when no result)
@@ -125,13 +133,20 @@ fun ImageDetailScreen(photoUri: String, navController: NavController) {
 // TopBar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailTopBar(navController: NavController, photoUri: String, albumViewModel: AlbumViewModel) {
+fun DetailTopBar(navController: NavController, photoUri: String, albumViewModel: AlbumViewModel, photoViewModel: PhotoViewModel) {
     val isHeartPressed = remember { mutableStateOf(false) }
+    val isTagPressed = remember { mutableStateOf(false) }
     val context = LocalContext.current
+
+    val photoDetail = photoViewModel.photos.value?.find { it.uri.toString() == photoUri }
+    if (photoDetail != null) {
+        if (photoDetail.tag != "") {
+            isTagPressed.value = true
+        }
+    }
 
     val isFavorite = albumViewModel.albums.value?.any { it.first == "Favorite" && it.second.contains(Uri.parse(photoUri)) } == true
     isHeartPressed.value = isFavorite
-
     TopAppBar(
         title = {
             Row(
@@ -163,6 +178,26 @@ fun DetailTopBar(navController: NavController, photoUri: String, albumViewModel:
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center
                 )
+
+                Icon(
+                    painter = painterResource(id = if (isTagPressed.value) R.drawable.activetag else R.drawable.tag),
+                    contentDescription = "Tag Icon",
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+
+                        ) {
+                            isTagPressed.value = !isTagPressed.value
+                            Log.d("DetailTopBar", "isTagPressed value: ${isTagPressed.value}")
+                            Log.d("DetailTopBar", "photoUri value: $photoUri")
+                            photoViewModel.addTag( photoUri, "Favorite" )
+                        },
+                    tint = if (isTagPressed.value) Color.Yellow else Color.Gray
+                )
+
+                Spacer(modifier = Modifier.width(10.dp))
 
                 // Heart Icon
                 Icon(

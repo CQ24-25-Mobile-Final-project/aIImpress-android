@@ -21,10 +21,8 @@ class StorageService(val context: Context) {
 
   fun upload(file: MediaFile): UploadTask? {
     val email = ContextStore.get(context, "email") ?: return null
-
     val riversRef = storageRef.child("$email/images/${file.name}")
     val uploadTask = riversRef.putFile(file.uri)
-
     return uploadTask
   }
 
