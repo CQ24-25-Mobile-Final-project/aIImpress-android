@@ -36,6 +36,11 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.aiimagegenerator.domain.Screen
+import com.example.aiimagegenerator.presentation.MainViewModel
+import com.example.aiimagegenerator.presentation.screens.HomeScreen
+import com.example.aiimagegenerator.presentation.screens.ImageScreen
+import com.example.aiimagegenerator.presentation.screens.LoadingScreen
 import com.hcmus.ui.album.AddNewAlbum
 import com.hcmus.ui.album.DisplayPhotoInAlbum
 import com.hcmus.ui.album.ImagePickerScreen
@@ -95,7 +100,7 @@ class PhotoGalleryViewModel : ViewModel() {
 
 
 @Composable
-fun MainNavigation(navController: NavHostController) {
+fun Navigation(viewModel: MainViewModel, navController: NavHostController) {
   val context = LocalContext.current
   val photoGalleryViewModel: PhotoGalleryViewModel = hiltViewModel()
   val authManager = remember {
@@ -121,10 +126,14 @@ fun MainNavigation(navController: NavHostController) {
             if (response is AuthResponse.Success) {
               Log.d("Login", "Success: $response")
               Toast.makeText(context, "Login Success", Toast.LENGTH_SHORT).show()
+
+              // Điều hướng đến màn hình Gallery và xóa Login khỏi stack
               navController.navigate("gallery") {
                 popUpTo("login") { inclusive = true }
               }
               isLoggedIn = true
+
+              // Lưu email người dùng vào ContextStore
               ContextStore.set(context, "email", email)
             } else {
               Log.d("Login", "Error: $response")
@@ -133,28 +142,38 @@ fun MainNavigation(navController: NavHostController) {
           }.launchIn(coroutineScope)
         },
         onSignIn = {
+          // Điều hướng đến màn hình SignIn
           navController.navigate("signIn") {
             popUpTo("login") { inclusive = true }
           }
         },
-        onLoginGoogle = {
-          authManager.signInWithGoogle().onEach { response ->
-            if (response is AuthResponse.Success) {
-              Log.d("Login", "Success: $response")
-              Toast.makeText(context, "Login Success", Toast.LENGTH_SHORT).show()
-              navController.navigate("gallery") {
-                popUpTo("login") { inclusive = true }
-              }
-            } else {
-              Log.d("Login", "Error: $response")
-              Toast.makeText(context, "Login Failed", Toast.LENGTH_SHORT).show()
+        onLoginGoogle = { user ->
+          if (user != null) {
+            Log.d("Login", "Google Login Success: ${user.email}")
+            Toast.makeText(context, "Login Success", Toast.LENGTH_SHORT).show()
+
+            // Điều hướng đến màn hình Gallery
+            navController.navigate("gallery") {
+              popUpTo("login") { inclusive = true }
             }
-          }.launchIn(coroutineScope)
+          } else {
+            Log.d("Login", "Google Login Failed")
+            Toast.makeText(context, "Login Failed", Toast.LENGTH_SHORT).show()
+          }
         }
       )
     }
 
-    composable("signIn") {
+      composable(Screen.HomeScreen.route){
+        HomeScreen(viewModel, navController)
+      }
+      composable(Screen.LoadingScreen.route){
+        LoadingScreen(viewModel, navController)
+      }
+      composable(Screen.ImageScreen.route){
+        ImageScreen(viewModel, navController)
+      }
+      composable("signIn") {
       SignInScreen(
         onSignIn = { email, password ->
           Log.d("Login", "Attempting to create account with email: $email")

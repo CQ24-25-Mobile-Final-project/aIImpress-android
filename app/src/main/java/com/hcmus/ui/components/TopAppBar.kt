@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import androidx.navigation.NavController
+import com.example.aiimagegenerator.domain.Screen
 import com.hcmus.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,8 +77,10 @@ fun GalleryTopBar(
       }
     },
     actions = {
-      IconButton(onClick = onActionClick ?: {}) {
-        Icon(
+      IconButton(onClick = {
+        navController.navigate(Screen.HomeScreen.route) // Điều hướng sang HomeScreen
+      }) {
+      Icon(
           imageVector = Icons.Default.Add,
           contentDescription = "Add Icon",
           tint = MaterialTheme.colorScheme.primary,

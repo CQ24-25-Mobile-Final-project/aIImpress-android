@@ -21,7 +21,13 @@ class MediaReader(
   private val cloudFirestoreService: CloudFirestoreService = CloudFirestoreService()
 
   fun getAllMediaFiles(): Map<String, List<MediaFile>> {
-    val email = ContextStore.get(context, "email") ?: throw Exception("Email not found")
+    val email = ContextStore.get(context, "email")
+    if (email.isNullOrEmpty()) {
+      Log.e("MediaReader", "Email not found in ContextStore")
+      return emptyMap()
+    }
+
+    Log.d("MediaReader", "Fetching media files for email: $email")
     val mediaFiles = mutableListOf<MediaFile>()
     val serverFiles = loadMediaFilesFromStorage()
     val localFiles = loadMediaFilesFromDevice()

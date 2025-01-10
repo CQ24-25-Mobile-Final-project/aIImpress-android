@@ -14,5 +14,7 @@
  * limitations under the License.
  */
 plugins {
-
+    id("com.chaquo.python") version "16.0.0" apply false
 }
+
+
