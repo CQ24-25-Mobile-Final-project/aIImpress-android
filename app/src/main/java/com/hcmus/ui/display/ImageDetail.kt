@@ -37,7 +37,6 @@ import com.hcmus.ui.album.AlbumViewModel
 import com.hcmus.ui.components.MediaFileManager
 import com.hcmus.ui.components.getPhotoDetail
 import showMoreOptions
-import java.net.URI
 import com.hcmus.ui.components.addTag1 as addTag1
 
 
