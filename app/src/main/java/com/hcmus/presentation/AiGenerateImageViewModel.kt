@@ -1,7 +1,7 @@
 package com.hcmus.presentation
 
 import android.util.Log
-import com.example.aiimagegenerator.domain.Constants
+import com.hcmus.domain.Constants
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

@@ -1,5 +1,6 @@
-package com.example.aiimagegenerator.presentation.screens
+package com.hcmus.presentation.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -17,7 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.example.aiimagegenerator.domain.Screen
+import com.hcmus.domain.Screen
 import com.hcmus.presentation.AiGenerateImageViewModel
 
 @Composable
@@ -35,6 +36,7 @@ fun GenerateImageScreen(viewModel: AiGenerateImageViewModel, navController: NavH
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
+            Log.d("GenerateImageScreen", "Button clicked")
             viewModel.generateImage(prompt)
             navController.navigate(Screen.LoadingScreen.route)
         }) {

@@ -1,4 +1,4 @@
-package com.example.aiimagegenerator.domain
+package com.hcmus.domain
 
 sealed class Screen(val route: String){
     object HomeScreen: Screen("Home_Screen")

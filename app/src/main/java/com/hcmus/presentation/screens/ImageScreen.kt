@@ -1,4 +1,4 @@
-package com.example.aiimagegenerator.presentation.screens
+package com.hcmus.presentation.screens
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -22,12 +22,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.example.aiimagegenerator.domain.Constants
-import com.example.aiimagegenerator.domain.Screen
+import com.hcmus.domain.Constants
+import com.hcmus.domain.Screen
 import com.hcmus.presentation.AiGenerateImageViewModel
 
 @Composable
@@ -90,7 +91,7 @@ fun ImageScreen(viewModel: AiGenerateImageViewModel, navController: NavHostContr
 
         // Show Error if Available
         errorMessage?.let { error ->
-            Text(text = "Error: $error", fontSize = 16.sp, color = androidx.compose.ui.graphics.Color.Red)
+            Text(text = "Error: $error", fontSize = 16.sp, color = Color.Red)
         }
 
     }

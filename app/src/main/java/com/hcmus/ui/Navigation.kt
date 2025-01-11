@@ -36,11 +36,11 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.aiimagegenerator.domain.Screen
+import com.hcmus.domain.Screen
 import com.hcmus.presentation.AiGenerateImageViewModel
-import com.example.aiimagegenerator.presentation.screens.GenerateImageScreen
-import com.example.aiimagegenerator.presentation.screens.ImageScreen
-import com.example.aiimagegenerator.presentation.screens.LoadingScreen
+import com.hcmus.presentation.screens.GenerateImageScreen
+import com.hcmus.presentation.screens.ImageScreen
+import com.hcmus.presentation.screens.LoadingScreen
 import com.hcmus.ui.album.AddNewAlbum
 import com.hcmus.ui.album.DisplayPhotoInAlbum
 import com.hcmus.ui.album.ImagePickerScreen

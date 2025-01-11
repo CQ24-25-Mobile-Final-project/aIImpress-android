@@ -1,4 +1,4 @@
-package com.example.aiimagegenerator.domain
+package com.hcmus.domain
 
 object Constants {
     const val TAG = "Ai_Image"
