@@ -60,6 +60,7 @@ import com.hcmus.auth.AuthenticationManager
 import com.hcmus.data.CloudFirestoreService
 import com.hcmus.data.ContextStore
 import com.hcmus.data.model.User
+import com.hcmus.ui.Trash.TrashAlbumScreen
 import com.hcmus.ui.display.ImageDescriptionScreen
 import com.hcmus.ui.display.MapPhotoView
 
@@ -118,7 +119,7 @@ fun Navigation(viewModel: AiGenerateImageViewModel, navController: NavHostContro
     }
 
     val categorizedPhotos by photoGalleryViewModel.categorizedPhotos.collectAsState()
-    NavHost(navController = navController, startDestination = "generate") {
+    NavHost(navController = navController, startDestination = "login") {
         composable("generate") {
             GenerateImageScreen(
                 viewModel = viewModel,
@@ -250,72 +251,76 @@ fun Navigation(viewModel: AiGenerateImageViewModel, navController: NavHostContro
                     navController.navigate("") {
                         popUpTo("gallery") { inclusive = true }
                     }
-                }
+                },
+                context = context
             )
         }
         composable("display_photo_in_album/{albumName}") { backStackEntry ->
             val albumName = backStackEntry.arguments?.getString("albumName")
             if (albumName != null) {
-                DisplayPhotoInAlbumScreen(navController, albumName = albumName)
+                DisplayPhotoInAlbumScreen(
+                    navController = navController,
+                    albumName = albumName,
+                    context = context
+                )
             }
         }
 
-    composable("imagePicker") {
-      ImagePickerScreen(context = LocalContext.current)
-    }
+        composable("imagePicker") {
+            ImagePickerScreen(context = LocalContext.current)
+        }
         composable("select_photo_for_album") {
             val albumModel: AlbumModel =
                 hiltViewModel() // Gọi hiltViewModel() bên trong hàm @Composable
             SelectPhotoForAlbum(
                 navController = navController,
-                albumModel = albumModel
+                albumModel = albumModel,
+                context = context
             )
         }
         composable("select_album_to_add_photo") {
             val albumModel: AlbumModel =
                 hiltViewModel() // Gọi hiltViewModel() bên trong hàm @Composable
-            val selectedPhotos =
-                albumModel.selectedPhotos // Lấy danh sách ảnh được chọn từ albumModel
 
             SelectAlbumToAddPhoto(
                 navController = navController,
                 albumModel = albumModel,
-                selectedPhotos = selectedPhotos // Truyền selectedPhotos vào đây
+                context = context
             )
         }
 
-    composable("shareScreen") { SharedGalleryScreen(navController = navController) }
+        composable("shareScreen") { SharedGalleryScreen(navController = navController) }
 
-    composable("galleryScreen") { PhotoGalleryScreen(navController = navController) }
+        composable("galleryScreen") { PhotoGalleryScreen(navController = navController) }
 
-    composable("appContent") { AppContent(navController = navController) }
-    composable(
-      route = "storyUI/{category}",
-      arguments = listOf(navArgument("category") {
-        type = NavType.StringType
-      })
-    ) { backStackEntry ->
-      val category = backStackEntry.arguments?.getString("category") ?: ""
-
-      val photosForCategory = categorizedPhotos[category]
+        composable("appContent") { AppContent(navController = navController) }
         composable(
-            route = "imageDetail/{photoUri}",
-            arguments = listOf(navArgument("photoUri") {
+            route = "storyUI/{category}",
+            arguments = listOf(navArgument("category") {
                 type = NavType.StringType
             })
         ) { backStackEntry ->
-            val photoUri = backStackEntry.arguments?.getString("photoUri") ?: ""
-            ImageDetailScreen(photoUri = photoUri, navController = navController)
-        }
+            val category = backStackEntry.arguments?.getString("category") ?: ""
 
-      if (photosForCategory != null) {
-        StoryUI(
-          navController = navController,
-          startIndex = 0,
-          photos = photosForCategory
-        )
-      }
-    }
+            val photosForCategory = categorizedPhotos[category]
+            composable(
+                route = "imageDetail/{photoUri}",
+                arguments = listOf(navArgument("photoUri") {
+                    type = NavType.StringType
+                })
+            ) { backStackEntry ->
+                val photoUri = backStackEntry.arguments?.getString("photoUri") ?: ""
+                ImageDetailScreen(photoUri = photoUri, navController = navController)
+            }
+
+            if (photosForCategory != null) {
+                StoryUI(
+                    navController = navController,
+                    startIndex = 0,
+                    photos = photosForCategory
+                )
+            }
+        }
         composable(
             route = "editImage/{photoUri}",
             arguments = listOf(navArgument("photoUri") {
@@ -369,12 +374,10 @@ fun Navigation(viewModel: AiGenerateImageViewModel, navController: NavHostContro
             }
         }
 
-	composable("trash_album_screen"){
-      TrashAlbumScreen(navController = navController)
-    }
+        composable("trash_album_screen") {
+            TrashAlbumScreen(navController = navController)
+        }
 
         composable("create_pin") { CreatePinScreen(navController) }
-
-//
     }
 }

@@ -5,9 +5,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import android.net.Uri
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import com.hcmus.data.firestore.AlbumFirestoreService
 import com.hcmus.data.model.Album
 
@@ -61,7 +58,7 @@ class AlbumModel : ViewModel() {
     fun deletePhotoInAlbum(albumName: String, photoUri: Uri) {
         albumRepository.deletePhotoInAlbum(albumName, photoUri)
         _photos.value = albumRepository.selectedAlbum(albumName)
-        _albums.value = albumRepository.albums
+//        _albums.value = albumRepository.albums
     }
 
 
