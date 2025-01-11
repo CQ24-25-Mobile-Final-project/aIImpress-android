@@ -16,36 +16,75 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.ui.platform.LocalContext
+import androidx.fragment.app.FragmentActivity
+import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthenticationScreen(navController: NavHostController) {
     var passcode by remember { mutableStateOf("") }
+    val context = LocalContext.current as FragmentActivity
+    val scope = rememberCoroutineScope()
 
-    val context = LocalContext.current
+    var isAuthFailed by remember { mutableStateOf(false) }
+    var isUnLocking by remember { mutableStateOf(false) }
+    val biometricPromptManager = remember { BiometricPromptManager(context) }
 
     LaunchedEffect(passcode) {
         if (passcode.length == 4) {
             val savedPin = PinStorage.getPin(context)
             if (passcode == savedPin) {
-                // Điều hướng khi mã PIN đúng
+                isUnLocking = true
+                isAuthFailed=false
                 navController.navigate("view")
             } else {
-                Toast.makeText(context,"Mật khẩu không đúng. Vui lòng nhập lại.",Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Mật khẩu không đúng. Vui lòng nhập lại.", Toast.LENGTH_SHORT).show()
                 passcode = ""
             }
         }
     }
 
+    LaunchedEffect(Unit) {
+        biometricPromptManager.promptResults.collect { result ->
+            when (result) {
+                is BiometricPromptManager.BiometricResult.AuthenticationSuccess -> {
+                    isUnLocking = true
+                    isAuthFailed = false
+                    navController.navigate("view")
+                }
+                is BiometricPromptManager.BiometricResult.AuthenticationError -> {
+                    isAuthFailed = true
+                    Toast.makeText(context, "Lỗi xác thực: ${result.error}", Toast.LENGTH_SHORT).show()
+                }
+                is BiometricPromptManager.BiometricResult.AuthenticationFailed -> {
+                    isAuthFailed = true
+                    Toast.makeText(context, "Xác thực không thành công", Toast.LENGTH_SHORT).show()
+                }
+                is BiometricPromptManager.BiometricResult.HardwareUnavailable -> {
+                    Toast.makeText(context, "Phần cứng không khả dụng", Toast.LENGTH_SHORT).show()
+                }
+                is BiometricPromptManager.BiometricResult.FeatureNotSupported -> {
+                    Toast.makeText(context, "Tính năng không được hỗ trợ", Toast.LENGTH_SHORT).show()
+                }
+                is BiometricPromptManager.BiometricResult.AuthenticationCanceled -> {
+                    Toast.makeText(context, "Xác thực bị hủy", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Passcode") },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigate("gallery") }) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back",tint=Color.Black)
+                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.Black)
                     }
                 }
             )
@@ -59,20 +98,38 @@ fun AuthenticationScreen(navController: NavHostController) {
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
-                imageVector = Icons.Default.Lock,
-                contentDescription = "Lock Icon",
+                imageVector = when {
+                    isUnLocking -> Icons.Default.CheckCircle // Icon mở khóa khi thành công
+                    isAuthFailed -> Icons.Default.Lock // Icon khóa khi thất bại
+                    else -> Icons.Default.Face // Icon khuôn mặt khi đang chờ xác thực
+                },
+                contentDescription = when {
+                    isUnLocking -> "Unlocked Icon"
+                    isAuthFailed -> "Locked Icon"
+                    else -> "Face Recognition Icon"
+                },
                 modifier = Modifier
                     .size(90.dp)
-                    .padding(top = 20.dp),
-                tint=Color.Black
+                    .padding(top = 20.dp)
+                    .clickable {
+                        if (!isUnLocking) {
+                            scope.launch {
+                                biometricPromptManager.showBiometricPrompt(
+                                    title = "Xác thực bằng vân tay",
+                                    description = "Sử dụng vân tay của bạn để mở khóa"
+                                )
+                            }
+                        }
+                    },
+                tint = Color.Black
             )
 
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Enter your 4 digit Passcode",
+                text = if (isUnLocking) "Đã mở khóa!" else "Nhập mật khẩu 4 chữ số",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color=Color.Black
+                color = Color.Black
             )
             Spacer(modifier = Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -98,8 +155,21 @@ fun AuthenticationScreen(navController: NavHostController) {
                 onBackspace = {
                     if (passcode.isNotEmpty()) passcode = passcode.dropLast(1)
                 },
-                keyLabel = "Forget"// dùng để đánh dấu nhãn của các nút tránh viết lại nhiều lần
+                keyLabel = "Forget"
             )
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(
+                onClick = {
+                    scope.launch {
+                        biometricPromptManager.showBiometricPrompt(
+                            title = "Mở bằng Vân Tay",
+                            description = "Sử dụng vân tay của bạn để mở khóa"
+                        )
+                    }
+                }
+            ) {
+                Text(text = "Unlock with Fingerprint", color = Color.White)
+            }
         }
     }
 }

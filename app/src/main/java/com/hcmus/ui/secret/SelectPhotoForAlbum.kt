@@ -23,7 +23,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,7 +37,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,40 +44,47 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.hcmus.data.ContextStore
 import com.hcmus.ui.album.ImagePickerScreen
 
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SelectPhotoForAlbum(navController: NavController,albumModel: AlbumModel) {
-    val albumViewModel: AlbumModel = hiltViewModel()
+fun SelectPhotoForAlbum(navController: NavController,context: Context,albumModel: AlbumModel) {
+    // Lấy email từ ContextStore
+    val email = remember { ContextStore.get(context, "email") ?: "" }
+
+    // Nếu email không hợp lệ, không tiếp tục
+    if (email.isBlank()) {
+        Log.e("SecretPhotoViewScreen", "Email not found in ContextStore")
+        return
+    }
+
     val context = LocalContext.current
     ImagePickerScreen(context = context)
-    val photos = remember { mutableStateOf<List<Uri>>(emptyList()) }
-    val selectedPhotos = remember { mutableStateListOf<Uri>() }
+    val photos = remember { mutableStateOf<List<Uri>>(fetchImages(context)) }
+    val selectedPhotos = albumModel.selectedPhotos.observeAsState(emptyList())
     val albumName = remember { Albums.albumName }
 
     // In log giá trị albumName
     Log.d("test", "Album Name: $albumName")
 
-    com.hcmus.ui.album.RequestMediaPermissions {
+    RequestMediaPermissions {
         photos.value = fetchImages(context)
     }
     // Kiểm tra nếu có hình ảnh nào được chọn
-    val isAddEnabled = selectedPhotos.isNotEmpty()
+    val isAddEnabled = selectedPhotos.value.isNotEmpty()
 
     Scaffold(
         topBar = {
@@ -88,7 +93,7 @@ fun SelectPhotoForAlbum(navController: NavController,albumModel: AlbumModel) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(text = "All Items")
                         Text(
-                            text = "add ${selectedPhotos.size} items to Secret",
+                            text = "add ${selectedPhotos.value.size} items to Secret",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Gray
                         )
@@ -104,29 +109,27 @@ fun SelectPhotoForAlbum(navController: NavController,albumModel: AlbumModel) {
                         Spacer(modifier = Modifier.width(8.dp))
                     }
                 },
-
                 actions = {
                     TextButton(
                         onClick = {
-                            if (albumViewModel.albums.value?.find { it.first == albumName } == null) {
-                                albumViewModel.addAlbum(albumName, selectedPhotos)
-                                Log.d("test", "Album does not exist. Creating new album.")
+                            Log.d("SelectedPhotos", "Selected photos: ${selectedPhotos.value}")
+                            Log.d("SelectPhotoForAlbum", "Selected Album Name: $albumName")
+
+                            Log.d("SelectPhotoForAlbum", "Selected Photos: ${selectedPhotos.value}")
+
+
+                            if (!albumName.isNullOrBlank()) {
+                                albumModel.addPhotosToAlbum(
+                                    email = email,
+                                    albumName = albumName,
+                                    photos = selectedPhotos.value
+                                )
+                                navController.navigate("view")
                             } else {
-                                navController.navigate("select_album_to_add_photo")
-                                Log.d("test", "Album exists. Adding photos to the existing album.")
-                                albumViewModel.insertIntoAlbum(albumName, selectedPhotos)
+                                Log.e("SelectPhotoForAlbum", "Album Name is null or blank")
                             }
-
-                            Log.d("SelectImage", "Selected images: ${selectedPhotos.size}")
-
                         },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = if (isAddEnabled) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f) // Màu chữ xám khi không có hình ảnh
-                            }
-                        )
+                        enabled = isAddEnabled
                     ) {
                         Text(text = "Add")
                     }
@@ -158,13 +161,15 @@ fun SelectPhotoForAlbum(navController: NavController,albumModel: AlbumModel) {
                 contentPadding = PaddingValues(2.dp)
             ) {
                 items(photos.value) { imageUri ->
-                    val isSelected = selectedPhotos.contains(imageUri)
+                    val isSelected = selectedPhotos.value.contains(imageUri)
                     Box(
                         modifier = Modifier
                             .aspectRatio(1f)
                             .clickable {
-                                if (isSelected) selectedPhotos.remove(imageUri) // Bỏ chọn
-                                else selectedPhotos.add(imageUri) // Chọn
+                                val currentSelected = selectedPhotos.value.toMutableList()
+                                if (isSelected) currentSelected.remove(imageUri)
+                                else currentSelected.add(imageUri)
+                                albumModel.updateSelectedPhotos(currentSelected)
                             }
                     ) {
                         Image(
@@ -192,13 +197,6 @@ fun SelectPhotoForAlbum(navController: NavController,albumModel: AlbumModel) {
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun SelectPhotoForAlbumPreview() {
-    val mockNavController = rememberNavController()
-    val mockAlbumModel = AlbumModel() // Replace with mock or default data
-    SelectPhotoForAlbum(navController = mockNavController, albumModel = mockAlbumModel)
-}
 
 
 @OptIn(ExperimentalPermissionsApi::class)

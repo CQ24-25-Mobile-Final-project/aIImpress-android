@@ -5,11 +5,15 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.mutableStateListOf
+import com.hcmus.data.firestore.AlbumFirestoreService
+import com.hcmus.data.model.Album
 
 class AlbumModel : ViewModel() {
-    private val _albums = MutableLiveData<List<Pair<String, List<Uri>>>>()
-    val albums: LiveData<List<Pair<String, List<Uri>>>> get() = _albums
+    private val albumService = AlbumFirestoreService()
+    private val albumRepository = Albums
+
+    private val _albums = MutableLiveData<List<Album>>()
+    val albums: LiveData<List<Album>> get() = _albums
 
     private val _albumName = MutableLiveData<String>()
     val albumName: LiveData<String>  get()= _albumName
@@ -17,68 +21,98 @@ class AlbumModel : ViewModel() {
     private val _photos = MutableLiveData<List<Uri>>()
     val photos: LiveData<List<Uri>> = _photos
 
-    private val albumRepository = Albums
+    private val _selectedAlbum = MutableLiveData<Album?>()
+    val selectedAlbum: LiveData<Album?> get() = _selectedAlbum
 
-    init {
-        _albums.value = albumRepository.albums
+    private val _selectedPhotos = MutableLiveData<List<Uri>>() // Danh sách ảnh được chọn
+    val selectedPhotos: LiveData<List<Uri>> get() = _selectedPhotos
+
+    fun updateSelectedPhotos(photos: List<Uri>) {
+        _selectedPhotos.value = photos
     }
 
-    private val _selectedPhotos = mutableStateListOf<Uri>()
-    val selectedPhotos: List<Uri> get() = _selectedPhotos
 
-    // Thêm ảnh vào danh sách
-    fun addSelectedPhoto(uri: Uri) {
-        _selectedPhotos.add(uri)
-    }
+    fun fetchAlbums(email: String) {
+        albumService.getAlbums(email) { albumList ->
+            val defaultAlbumExists = albumList.any { it.name == "defaultVault" }
+            if (!defaultAlbumExists) {
+                // Nếu album mặc định chưa tồn tại, lưu vào Firestore
+                val defaultAlbum = Album(name = "defaultVault", images = emptyList())
+                albumService.saveAlbum(email, defaultAlbum)
+                // Cập nhật danh sách albums sau khi lưu
+                albumService.getAlbums(email) { updatedAlbumList ->
+                    val updatedList = (listOf(defaultAlbum) + updatedAlbumList)
+                        .distinctBy { it.name }
+                    _albums.postValue(updatedList)
+                }
 
-    // Xóa ảnh khỏi danh sách
-    fun removeSelectedPhoto(uri: Uri) {
-        _selectedPhotos.remove(uri)
-    }
-
-    fun selectAlbum(name: String) {
-        _albumName.value = name
-        _photos.value = albumRepository.selectedAlbum(name)
-    }
-
-    fun addAlbum(name: String, photos: List<Uri>) {
-        albumRepository.addAlbum(name, photos)
-        _albums.value = albumRepository.albums
-    }
-
-    fun insertIntoAlbum(name: String, photos: List<Uri>) {
-        albumRepository.insertIntoAlbum(name, photos)
-        _albums.value = albumRepository.albums
-    }
-
-    fun deleteAlbum(name: String) {
-        albumRepository.deleteAlbum(name)
-        _albums.value = albumRepository.albums
+            } else {
+                // Nếu đã tồn tại, chỉ cập nhật danh sách albums
+                val updatedList = (listOf(Album(name = "defaultVault")) + albumList)
+                    .distinctBy { it.name }
+                _albums.postValue(updatedList)
+            }
+        }
     }
 
     fun deletePhotoInAlbum(albumName: String, photoUri: Uri) {
         albumRepository.deletePhotoInAlbum(albumName, photoUri)
         _photos.value = albumRepository.selectedAlbum(albumName)
-        _albums.value = albumRepository.albums
+//        _albums.value = albumRepository.albums
     }
 
-    fun addAlbumName(name: String) {
-        Log.d("AlbumViewModel", "Setting album name: $name")
-        albumRepository.addAlbumName(name)
-        _albums.value = albumRepository.albums
-    }
-    fun renameAlbum(oldName: String, newName: String) {
-        albumRepository.renameAlbum(oldName, newName)
-        _albums.value = albumRepository.albums // Cập nhật lại LiveData albums
+
+    // Thêm album mới
+    fun addAlbum(email: String, albumName: String) {
+        val newAlbum = Album(name = albumName, images = emptyList())
+        albumService.saveAlbum(email, newAlbum)
+        fetchAlbums(email) // Cập nhật danh sách sau khi thêm
     }
 
-    // Sort albums by name
-    fun sortAlbumsByName() {
-        _albums.value = albumRepository.sortAlbumsByName()
+    // Lưu album mới vào Firestore
+    fun saveAlbum(email: String, name: String, photos: List<Uri>) {
+        val photoStrings = photos.map { it.toString() }
+        val album = Album(
+            name = name,
+            images = photoStrings
+        )
+        albumService.saveAlbum(email, album)
+        fetchAlbums(email) // Cập nhật danh sách albums
     }
 
-    // Sort albums by the number of photos
-    fun sortAlbumsByPhotoCount() {
-        _albums.value = albumRepository.sortAlbumsByPhotoCount()
+
+    // Đổi tên album
+    fun renameAlbum(email: String, oldName: String, newName: String) {
+        albumService.renameAlbum(email, oldName, newName) {
+            fetchAlbums(email) // Cập nhật danh sách sau khi đổi tên
+        }
     }
+
+
+    // Thêm ảnh vào album
+    fun addPhotosToAlbum(email: String, albumName: String, photos: List<Uri>) {
+        albumService.addPhotosToAlbum(email, albumName, photos) {
+            fetchAlbums(email) // Gọi lại fetchAlbums sau khi thêm ảnh hoàn tất
+        }
+    }
+    // Xóa album
+    fun deleteAlbum(email: String, albumId: String) {
+        albumService.deleteAlbum(email, albumId)
+        fetchAlbums(email) // Cập nhật danh sách albums
+    }
+
+    // Xóa ảnh khỏi album
+    fun deletePhotoFromAlbum(email: String, albumId: String, photoUri: Uri) {
+        albumService.deletePhotoFromAlbum(email, albumId, photoUri)
+        fetchAlbums(email) // Cập nhật danh sách albums
+    }
+
+
+    fun selectAlbum(name: String) {
+        _albumName.value = name
+        _photos.value = albumRepository.selectedAlbum(name)
+        Log.d("AlbumModel", "Selected album: $name")
+    }
+
+
 }

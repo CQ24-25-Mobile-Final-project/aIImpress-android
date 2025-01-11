@@ -252,7 +252,8 @@ fun DetailBottomBar(navController: NavController, photoUri: String) {
             isSelected = selectedItem.value == 1,
             iconRes = R.drawable.trash_icon,
             contentDescription = "Delete Icon",
-            onClick = { selectedItem.value = 1 }
+            onClick = { selectedItem.value = 1
+            navController.navigate("trash_album_screen")}
         )
 
         BottomBarItem(
