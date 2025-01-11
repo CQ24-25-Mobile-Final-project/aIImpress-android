@@ -1,5 +1,9 @@
 package com.hcmus.ui.screens
 
+import android.app.Activity
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,15 +37,47 @@ import com.hcmus.ui.theme.MyApplicationTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.platform.LocalContext
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.tasks.Task
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
 
 @Composable
 fun LoginScreen(
   onLoginEmail: (email: String, password: String) -> Unit,
   onSignIn: () -> Unit,
-  onLoginGoogle: () -> Unit
+  onLoginGoogle: (FirebaseUser?) -> Unit
 ) {
   var email by remember { mutableStateOf("") }
   var password by remember { mutableStateOf("") }
+  val context = LocalContext.current
+  val activity = context as? Activity
+  val auth = FirebaseAuth.getInstance()
+
+  // Configure Google Sign-In options for Firebase
+  val googleSignInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+    .requestIdToken("679823525557-t7h5r3bv2f2hqvosfro990lb9momk7g9.apps.googleusercontent.com") // Replace with your Firebase client ID
+    .requestEmail()
+    .build()
+
+  val googleSignInClient = GoogleSignIn.getClient(context, googleSignInOptions)
+
+  // Launcher for Google Sign-In activity
+  val googleSignInLauncher = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.StartActivityForResult()
+  ) { result ->
+    if (result.resultCode == Activity.RESULT_OK) {
+      val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+      handleSignInResult(task, auth, onLoginGoogle)  // Xử lý kết quả đăng nhập
+    } else {
+      onLoginGoogle(null) // Pass null if login failed
+    }
+  }
 
   Column(
     modifier = Modifier
@@ -50,7 +86,6 @@ fun LoginScreen(
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.SpaceBetween
   ) {
-
     Spacer(modifier = Modifier.height(24.dp))
 
     // App Logo and Tagline
@@ -110,30 +145,33 @@ fun LoginScreen(
       SignInButton(
         text = "Continue With Google",
         color = Color.White,
-        onClick = onLoginGoogle
+        onClick = {
+          val signInIntent = googleSignInClient.signInIntent
+          googleSignInLauncher.launch(signInIntent)  // Launch Google Sign-In
+        }
       )
     }
 
     Spacer(modifier = Modifier.height(16.dp))
 
     Row(
-        modifier = Modifier
-            .padding(top = 16.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
+      modifier = Modifier
+        .padding(top = 16.dp),
+      horizontalArrangement = Arrangement.Center,
+      verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = "Already Have An Account? ",
-            color = Color.Gray
+      Text(
+        text = "Already Have An Account? ",
+        color = Color.Gray
+      )
+      Text(
+        text = "Sign Up",
+        color = BluePrimary,
+        modifier = Modifier.clickable { onSignIn() },
+        style = TextStyle(
+          fontWeight = FontWeight.Bold
         )
-        Text(
-            text = "Sign Up",
-            color = BluePrimary,
-            modifier = Modifier.clickable { onSignIn() },
-            style = TextStyle(
-                fontWeight = FontWeight.Bold
-            )
-        )
+      )
     }
   }
 }
@@ -165,12 +203,34 @@ fun SignInButton(
   }
 }
 
+private fun handleSignInResult(
+  completedTask: Task<GoogleSignInAccount>,
+  auth: FirebaseAuth,
+  onLoginGoogle: (FirebaseUser?) -> Unit
+) {
+  try {
+    // Đăng nhập với tài khoản Google
+    val account = completedTask.getResult(ApiException::class.java)
+    val credential = GoogleAuthProvider.getCredential(account.idToken, null)
 
-// previews
-@Preview(showBackground = true)
-@Composable
-private fun DefaultPreview() {
-  MyApplicationTheme {
-    LoginScreen({} as (String, String) -> Unit, {}, {})
+    // Đăng nhập hoặc đăng ký người dùng với Firebase
+    auth.signInWithCredential(credential)
+      .addOnCompleteListener { task ->
+        if (task.isSuccessful) {
+
+          // Đăng nhập hoặc tạo tài khoản thành công
+          val user = auth.currentUser
+          Log.d("DebugInfo", "Email: $user")
+
+          onLoginGoogle(user)  // Pass FirebaseUser
+        } else {
+          // Nếu đăng nhập thất bại
+          onLoginGoogle(null)
+        }
+      }
+  } catch (e: ApiException) {
+    Log.e("GoogleSignIn", "signInResult:failed code=" + e.statusCode)
+    onLoginGoogle(null)  // Nếu gặp lỗi trong quá trình đăng nhập
   }
 }
+

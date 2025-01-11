@@ -2,6 +2,7 @@ package com.hcmus.ui.display.editimage
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -37,17 +38,21 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
+
 import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
 import com.canhub.cropper.CropImageOptions
+import ja.burhanrashid52.photoeditor.OnSaveBitmap
 
 import ja.burhanrashid52.photoeditor.PhotoEditor
 import ja.burhanrashid52.photoeditor.PhotoEditorView
 import ja.burhanrashid52.photoeditor.SaveFileResult
+import ja.burhanrashid52.photoeditor.SaveSettings
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
@@ -66,6 +71,7 @@ fun EditImageScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val photoEditorView = remember { mutableStateOf<PhotoEditorView?>(null) }
     val photoEditor = remember { mutableStateOf<PhotoEditor?>(null) }
+
     var isFilterMenuVisible by remember { mutableStateOf(false) }
     var selectedBrushColor by remember { mutableStateOf(Color.Red) }
     var selectedTextColor by remember { mutableStateOf(Color.Blue) }
@@ -82,12 +88,7 @@ fun EditImageScreen(
             if (result.isSuccessful) {
                 result.uriContent?.let { uri ->
                     Log.d("CropImage", "Crop successful, new URI: $uri")
-                    editedBitmap.value = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-                        MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
-                    } else {
-                        val source = ImageDecoder.createSource(context.contentResolver, uri)
-                        ImageDecoder.decodeBitmap(source)
-                    }
+                    editedBitmap.value = loadBitmapFromUri(context, uri)
                 }
             } else {
                 Log.e("CropImage", "Crop failed: ${result.error}")
@@ -97,12 +98,7 @@ fun EditImageScreen(
     // Load the initial image from URI
     if (originalBitmap.value == null) {
         val uri = Uri.parse(photoUri)
-        originalBitmap.value = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-            MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
-        } else {
-            val source = ImageDecoder.createSource(context.contentResolver, uri)
-            ImageDecoder.decodeBitmap(source)
-        }
+        originalBitmap.value = loadBitmapFromUri(context, uri)
         editedBitmap.value = originalBitmap.value
     }
 
@@ -125,7 +121,7 @@ fun EditImageScreen(
                 .setPinchTextScalable(true)
                 .build()
 
-            bitmap = loadBitmapFromUri(context, Uri.parse(photoUri))
+            bitmap = editedBitmap.value
             bitmap?.let { editorView.source.setImageBitmap(it) }
         }
     }
@@ -138,12 +134,9 @@ fun EditImageScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // Brush Settings
-
-
         Spacer(modifier = Modifier.weight(1f))
 
-        // Undo and Redo Buttons (Green icon, transparent background)
+        // Undo and Redo Buttons
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -152,23 +145,21 @@ fun EditImageScreen(
         ) {
             Button(
                 onClick = { photoEditor.value?.undo() },
-                modifier = Modifier
-
-                    .background(Color.Transparent, shape = CircleShape), // Transparent background
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent) // No background color
+                modifier = Modifier.background(Color.Transparent, shape = CircleShape),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
             ) {
-                Icon(Icons.Filled.Undo, contentDescription = "Undo", tint = Color.Blue) // Green icon
+                Icon(Icons.Filled.Undo, contentDescription = "Undo", tint = Color.Blue)
             }
             Button(
                 onClick = { photoEditor.value?.redo() },
-                modifier = Modifier
-
-                    .background(Color.Transparent, shape = CircleShape), // Transparent background
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent) // No background color
+                modifier = Modifier.background(Color.Transparent, shape = CircleShape),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
             ) {
-                Icon(Icons.Filled.Redo, contentDescription = "Redo", tint = Color.Blue) // Green icon
+                Icon(Icons.Filled.Redo, contentDescription = "Redo", tint = Color.Blue)
             }
         }
+
+        // Brush Settings
         if (isBrushActive) {
             BrushSettings(
                 photoEditor = photoEditor.value,
@@ -185,24 +176,23 @@ fun EditImageScreen(
                 }
             )
         }
+
+        // Filter Menu
         if (isFilterMenuVisible) {
             FilterMenu(
                 photoEditor = photoEditor.value,
                 onClose = { isFilterMenuVisible = false }
             )
         }
-// Middle Button Bar for Brush, Text, Eraser, Filter, and Crop
+
+        // Button Bar for Brush, Text, Eraser, Filter, and Crop
         LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(
-                listOf(
-                    "Brush", "Text", "Eraser", "Filter", "Crop", "Remove Background"
-                )
-            ) { action ->
+            items(listOf("Brush", "Text", "Eraser", "Filter", "Crop", "Remove Background")) { action ->
                 Button(
                     onClick = {
                         when (action) {
@@ -230,14 +220,12 @@ fun EditImageScreen(
                             "Remove Background" -> {
                                 navController.navigate("remove_background_screen")
                             }
-
                         }
                     },
                     modifier = Modifier
                         .background(Color.Transparent, shape = CircleShape)
                         .padding(8.dp)
                 ) {
-                    // Icons for Brush, Text, Eraser, Filter, Crop with green background
                     when (action) {
                         "Brush" -> Icon(Icons.Filled.Brush, contentDescription = "Brush", tint = Color.White)
                         "Text" -> Icon(Icons.Filled.TextFields, contentDescription = "Text", tint = Color.White)
@@ -250,21 +238,19 @@ fun EditImageScreen(
             }
         }
 
-
-
-// Bottom Button Bar for Save and Cancel (Blue background with white text, aligned to both sides)
+        // Bottom Button Bar for Save and Cancel
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween // Buttons span across the width, aligned to both sides
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Button(
                 onClick = { navController.popBackStack() },
-                modifier = Modifier.width(100.dp), // Reduced width
+                modifier = Modifier.width(100.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Blue, // Blue background
-                    contentColor = Color.White   // White text
+                    containerColor = Color.Blue,
+                    contentColor = Color.White
                 )
             ) {
                 Text("Cancel", color = Color.White)
@@ -272,16 +258,15 @@ fun EditImageScreen(
             Button(
                 onClick = {
                     lifecycleOwner.lifecycleScope.launch {
-                        saveImage(
-                            context = context,
-                            photoEditor = photoEditor.value
-                        ) { navController.popBackStack() }
+                        saveImageAsBitmap(context, photoEditor.value) {
+                            navController.popBackStack() // Successfully saved, go back
+                        }
                     }
                 },
-                modifier = Modifier.width(100.dp), // Reduced width
+                modifier = Modifier.width(100.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Blue, // Blue background
-                    contentColor = Color.White   // White text
+                    containerColor = Color.Blue,
+                    contentColor = Color.White
                 )
             ) {
                 Text("Save", color = Color.White)
@@ -304,7 +289,7 @@ fun EditImageScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         ColorPickerRow(
-                            colors = listOf(Color.Red, Color.Blue, Color.Blue, Color.Yellow),
+                            colors = listOf(Color.Red, Color.Blue, Color.Yellow),
                             selectedColor = selectedTextColor,
                             onColorSelected = { color -> selectedTextColor = color }
                         )
@@ -322,12 +307,10 @@ fun EditImageScreen(
                 }
             )
         }
-
-        // Filter Menu
-
     }
 }
 
+// Bitmap Loading Helper
 fun loadBitmapFromUri(context: Context, uri: Uri): Bitmap? {
     return try {
         val inputStream = context.contentResolver.openInputStream(uri)
@@ -338,29 +321,41 @@ fun loadBitmapFromUri(context: Context, uri: Uri): Bitmap? {
     }
 }
 
-@SuppressLint("MissingPermission")
-private suspend fun saveImage(
-    context: Context,
-    photoEditor: PhotoEditor?,
-    onSuccess: () -> Unit
-) {
-    try {
-        val file = File(context.cacheDir, "saved_image_${System.currentTimeMillis()}.png")
-        val result = photoEditor?.saveAsFile(file.absolutePath)
+private fun saveImageAsBitmap(context: Context, photoEditor: PhotoEditor?, onSaved: () -> Unit) {
+    photoEditor?.saveAsBitmap(object : OnSaveBitmap {
+        override fun onBitmapReady(saveBitmap: Bitmap) {
+            saveBitmap?.let { bitmap ->
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.Images.Media.DISPLAY_NAME, "edited_image_${System.currentTimeMillis()}.png")
+                    put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+                    put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/EditedImages")
+                }
 
-        if (result is SaveFileResult.Success) {
-            onSuccess()
-        } else {
-            Log.e("SaveImage", "Failed to save image: $result")
+                val uri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+                uri?.let {
+                    try {
+                        context.contentResolver.openOutputStream(it)?.use { outputStream ->
+                            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+                            onSaved()
+                        }
+                    } catch (e: Exception) {
+                        Log.e("SaveImage", "Error saving image", e)
+                    }
+                }
+            }
         }
-    } catch (e: Exception) {
-        Log.e("SaveImage", "Error saving image", e)
-    }
+
+        fun onFailure(e: Exception?) {
+            Log.e("SaveImage", "Failed to save bitmap", e)
+        }
+    })
 }
+
 private fun saveBitmapToTempFile(context: Context, bitmap: Bitmap): Uri {
     val tempFile = File.createTempFile("temp_image", ".png", context.cacheDir).apply {
-        deleteOnExit()
+        deleteOnExit() // Delete when app closes
     }
+
     FileOutputStream(tempFile).use { out ->
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
         out.flush()
