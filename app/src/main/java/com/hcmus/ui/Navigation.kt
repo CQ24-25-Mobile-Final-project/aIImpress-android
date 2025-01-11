@@ -260,6 +260,9 @@ fun Navigation(viewModel: AiGenerateImageViewModel, navController: NavHostContro
             }
         }
 
+    composable("imagePicker") {
+      ImagePickerScreen(context = LocalContext.current)
+    }
         composable("select_photo_for_album") {
             val albumModel: AlbumModel =
                 hiltViewModel() // Gọi hiltViewModel() bên trong hàm @Composable
@@ -281,9 +284,20 @@ fun Navigation(viewModel: AiGenerateImageViewModel, navController: NavHostContro
             )
         }
 
+    composable("shareScreen") { SharedGalleryScreen(navController = navController) }
 
+    composable("galleryScreen") { PhotoGalleryScreen(navController = navController) }
 
+    composable("appContent") { AppContent(navController = navController) }
+    composable(
+      route = "storyUI/{category}",
+      arguments = listOf(navArgument("category") {
+        type = NavType.StringType
+      })
+    ) { backStackEntry ->
+      val category = backStackEntry.arguments?.getString("category") ?: ""
 
+      val photosForCategory = categorizedPhotos[category]
         composable(
             route = "imageDetail/{photoUri}",
             arguments = listOf(navArgument("photoUri") {
@@ -294,6 +308,14 @@ fun Navigation(viewModel: AiGenerateImageViewModel, navController: NavHostContro
             ImageDetailScreen(photoUri = photoUri, navController = navController)
         }
 
+      if (photosForCategory != null) {
+        StoryUI(
+          navController = navController,
+          startIndex = 0,
+          photos = photosForCategory
+        )
+      }
+    }
         composable(
             route = "editImage/{photoUri}",
             arguments = listOf(navArgument("photoUri") {
@@ -346,6 +368,10 @@ fun Navigation(viewModel: AiGenerateImageViewModel, navController: NavHostContro
                 )
             }
         }
+
+	composable("trash_album_screen"){
+      TrashAlbumScreen(navController = navController)
+    }
 
         composable("create_pin") { CreatePinScreen(navController) }
 

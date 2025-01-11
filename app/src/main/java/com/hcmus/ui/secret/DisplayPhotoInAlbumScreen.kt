@@ -1,19 +1,14 @@
 package com.hcmus.ui.secret
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,24 +16,38 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.hcmus.R
 import android.net.Uri
+import android.util.Log
 import androidx.compose.material.icons.filled.CheckCircle
 import coil.compose.AsyncImage
+import com.google.firebase.firestore.FirebaseFirestore
+import com.hcmus.data.ContextStore
+import com.hcmus.data.model.Album
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DisplayPhotoInAlbumScreen(navController: NavController, albumName: String) {
+fun DisplayPhotoInAlbumScreen(navController: NavController, context: Context, albumName: String) {
     // Giả lập dữ liệu ảnh theo từng album
-    val photoList = remember { getPhotosForAlbum(albumName) }
+    var photoList by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    // Lấy email từ ContextStore
+    val email = remember { ContextStore.get(context, "email") ?: "" }
 
+    // Nếu email không hợp lệ, không tiếp tục
+    if (email.isBlank()) {
+        Log.e("DisplayPhotoInAlbumScreen", "Email not found in ContextStore")
+        return
+    }
+
+    // Lấy dữ liệu từ Firestore
+    LaunchedEffect(albumName) {
+        getPhotosForAlbumFromFirestore(albumName, email) { photos ->
+            photoList = photos
+        }
+    }
     val photoCount = photoList.size
     val videoCount = 0 // Giả sử không có video trong album này
 
@@ -114,9 +123,27 @@ fun DisplayPhotoInAlbumScreen(navController: NavController, albumName: String) {
     )
 }
 
-// Hàm giả lập dữ liệu ảnh theo tên album
-fun getPhotosForAlbum(albumName: String): List<Uri> {
-    return Albums.albums.find { it.first == albumName }?.second ?: emptyList()
+fun getPhotosForAlbumFromFirestore(
+    albumName: String,
+    userEmail: String,
+    onResult: (List<Uri>) -> Unit
+) {
+    val db = FirebaseFirestore.getInstance()
+        .collection("android-collection")
+        .document(userEmail)
+        .collection("albums")
+
+    db.whereEqualTo("name", albumName)
+        .get()
+        .addOnSuccessListener { querySnapshot ->
+            val album = querySnapshot.documents.firstOrNull()?.toObject(Album::class.java)
+            val photoUris = album?.images?.map { Uri.parse(it.toString()) } ?: emptyList()
+            onResult(photoUris)
+        }
+        .addOnFailureListener { e ->
+            Log.e("Firestore", "Error fetching photos: ${e.message}")
+            onResult(emptyList())
+        }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
