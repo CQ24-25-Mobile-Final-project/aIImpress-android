@@ -48,6 +48,15 @@ class MediaReader(
       storageService.bulkDownload(fileNotInDevice)
     }
 
+    mediaFiles.map { localFile ->
+      val serverFile = serverFiles.find { it.uri == localFile.uri }
+      if (serverFile != null) {
+        localFile.copy(tag = serverFile.tag)
+      } else {
+        localFile
+      }
+    }
+
     mediaFiles.addAll(localFiles + serverFiles)
 
     val distinctFiles = mediaFiles.distinctBy { it.uri }
@@ -86,17 +95,18 @@ class MediaReader(
         val name = cursor.getString(nameColumn)
         val dateAdded = cursor.getLong(dateColumn)
         val uri = ContentUris.withAppendedId(queryUri, id)
+        val tag = ""
 
         mediaFiles.add(
           MediaFile(
             uri = uri,
             name = name,
             dateAdded = dateAdded,
+            tag = tag,
           )
         )
       }
     }
-
     return mediaFiles.toList()
   }
 
@@ -118,7 +128,8 @@ class MediaReader(
           uri = Uri.parse(it["uri"] as String),
           url = Uri.parse(it["url"] as String),
           name = it["name"] as String,
-          dateAdded = it["dateAdded"] as Long
+          dateAdded = it["dateAdded"] as Long,
+          tag = it["tag"] as String
         )
       })
     }
