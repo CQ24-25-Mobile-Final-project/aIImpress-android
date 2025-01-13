@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 
 import androidx.compose.runtime.Composable
@@ -36,6 +37,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.hcmus.ui.theme.BluePrimary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -67,9 +69,6 @@ fun ImageDescriptionScreen(photoUri: String, viewModel: MainViewModel, navContro
         Image(
             painter = rememberAsyncImagePainter(model = Uri.parse(photoUri)),
             contentDescription = "Photo",
-            modifier = Modifier
-                .size(200.dp)
-                .clip(CircleShape),
             contentScale = ContentScale.Crop
         )
 
@@ -102,9 +101,17 @@ fun ImageDescriptionScreen(photoUri: String, viewModel: MainViewModel, navContro
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = { navController.popBackStack() }) {
+        Button(
+            onClick = { navController.popBackStack() },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = BluePrimary,
+                contentColor = Color.White
+            ),
+            modifier = Modifier.padding(8.dp)
+        ) {
             Text(text = "Back")
         }
+
     }
 
     // Gửi yêu cầu lấy mô tả ảnh nếu chưa có

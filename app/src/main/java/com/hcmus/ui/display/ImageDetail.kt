@@ -243,15 +243,15 @@ fun DetailBottomBar(navController: NavController, photoUri: String) {
     ) {
         BottomBarItem(
             isSelected = selectedItem.value == 0,
-            iconRes = R.drawable.privacy_icon,
-            contentDescription = "Privacy Icon",
+            iconRes = R.drawable.lock_icon,
+            contentDescription = "Privacy",
             onClick = { selectedItem.value = 0 }
         )
 
         BottomBarItem(
             isSelected = selectedItem.value == 1,
-            iconRes = R.drawable.trash_icon,
-            contentDescription = "Delete Icon",
+            iconRes = R.drawable.delete_icon,
+            contentDescription = "Delete",
             onClick = { selectedItem.value = 1
             navController.navigate("trash_album_screen")}
         )
@@ -259,7 +259,7 @@ fun DetailBottomBar(navController: NavController, photoUri: String) {
         BottomBarItem(
             isSelected = selectedItem.value == 2,
             iconRes = R.drawable.edit_icon,
-            contentDescription = "Edit Icon",
+            contentDescription = "Edit",
             onClick = {
                 selectedItem.value = 2
                 navController.navigate("editImage/${Uri.encode(photoUri)}")
@@ -270,30 +270,30 @@ fun DetailBottomBar(navController: NavController, photoUri: String) {
         BottomBarItem(
             isSelected = selectedItem.value == 3,
             iconRes = R.drawable.share_icon,
-            contentDescription = "Share Icon",
+            contentDescription = "Share",
             onClick = { selectedItem.value = 3 },
 
         )
-
         BottomBarItem(
             isSelected = selectedItem.value == 4,
-            iconRes = R.drawable.menu_icon,
-            contentDescription = "More Icon",
+            iconRes = R.drawable.caption_icon,
+            contentDescription = "Caption",
             onClick = {
                 selectedItem.value = 4
+                navController.navigate("imageDescription/${Uri.encode(photoUri)}")
+            },
+
+            )
+        BottomBarItem(
+            isSelected = selectedItem.value == 5,
+            iconRes = R.drawable.more_icon,
+            contentDescription = "More",
+            onClick = {
+                selectedItem.value = 5
                 showDialog.value = true },
 
         )
-        BottomBarItem(
-            isSelected = selectedItem.value == 5,
-            iconRes = R.drawable.menu_icon,
-            contentDescription = "More Icon",
-            onClick = {
-                selectedItem.value = 5
-                navController.navigate("imageDescription/${Uri.encode(photoUri)}")
-                },
 
-            )
     }
     if (showDialog.value) {
         showMoreOptions(navController, photoUri, context = LocalContext.current)
@@ -323,6 +323,7 @@ fun BottomBarItem(
             tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(27.dp)
         )
+
     }
 }
 fun copyTextToClipboard(context: Context, text: String) {

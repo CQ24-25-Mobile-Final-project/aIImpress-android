@@ -68,7 +68,7 @@ fun CustomBottomBar(
 
             BottomBarItem(
                 isSelected = selectedIndex == 2,
-                iconRes = R.drawable.privacy_icon,
+                iconRes = R.drawable.lock_icon,
                 contentDescription = "Privacy",
                 onClick = {
                     val savedPin = PinStorage.getPin(navController.context)
@@ -86,8 +86,8 @@ fun CustomBottomBar(
             )
             BottomBarItem(
                 isSelected = selectedIndex == 3,
-                iconRes = R.drawable.people_icon,
-                contentDescription = "Profile",
+                iconRes = R.drawable.location_icon,
+                contentDescription = "Location",
                 onClick = {
                     onTabSelected(3)
                     navController.navigate("photo_map")
@@ -122,19 +122,35 @@ fun BottomBarItem(
     contentDescription: String,
     onClick: () -> Unit
 ) {
-    Box(
+    Column(
         modifier = Modifier
-            .size(50.dp) // Kích thước của từng mục
-            .clip(CircleShape) // Hình dạng tròn
-            .background(if (isSelected) MaterialTheme.colorScheme.secondary else Color.Transparent) // Màu nền nếu được chọn
-            .clickable(onClick = onClick), // Xử lý click
-        contentAlignment = Alignment.Center
+            .size(60.dp) // Tăng kích thước để đủ không gian cho icon và text
+            .clickable(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            painter = painterResource(id = iconRes),
-            contentDescription = contentDescription,
-            tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary, // Màu sắc khi được chọn
-            modifier = Modifier.size(27.dp) // Kích thước biểu tượng
+        // Icon
+        Box(
+            modifier = Modifier
+                .size(50.dp)
+                .clip(CircleShape)
+                .background(if (isSelected) MaterialTheme.colorScheme.secondary else Color.Transparent),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(id = iconRes),
+                contentDescription = contentDescription,
+                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(27.dp)
+            )
+        }
+
+        // Content description text
+        Text(
+            text = contentDescription,
+            style = MaterialTheme.typography.labelSmall,
+            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Gray,
+            modifier = Modifier.padding(top = 4.dp)
         )
     }
 }

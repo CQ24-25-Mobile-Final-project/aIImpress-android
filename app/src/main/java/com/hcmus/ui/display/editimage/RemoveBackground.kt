@@ -47,6 +47,7 @@ import com.google.mlkit.vision.segmentation.Segmenter
 import com.google.mlkit.vision.segmentation.selfie.SelfieSegmenterOptions
 import org.koin.androidx.compose.koinViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.core.scope.get
 import org.koin.dsl.module
 import java.nio.ByteBuffer
 
@@ -215,13 +216,15 @@ class MainViewModel : ViewModel(), ProcessedListener {
 val appModule = module {
     viewModel { MainViewModel() }
 }
+
 enum class DisplayMode {
     NORMAL,
     MASK,
     CUSTOM_BG
 }
 @Composable
-fun ImageSegmenter(navController: NavController, viewModel: MainViewModel = koinViewModel()) {
+fun ImageSegmenter(navController: NavController) {
+    var viewModel: MainViewModel = koinViewModel()
     val context = LocalContext.current
 
     // Observe LiveData as State in Compose

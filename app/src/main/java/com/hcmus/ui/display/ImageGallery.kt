@@ -1,9 +1,6 @@
 package com.hcmus.ui.display
 
-import android.content.Context
 import android.net.Uri
-import android.provider.MediaStore.Audio.Media
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -29,14 +26,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.insets.LocalWindowInsets
 import com.hcmus.R
-import com.hcmus.data.StorageService
 import com.hcmus.ui.components.CustomBottomBar
 import com.hcmus.ui.components.GalleryTopBar
-import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,26 +43,24 @@ fun PhotoGalleryScreen(navController: NavController) {
     // Assuming MediaReader is a custom class for accessing media files
     val mediaReader = remember { MediaReader(context) }
     val photosByDate = remember { mediaReader.getAllMediaFiles() }
-    val photosByTag = remember { mediaReader.loadMediaFilesFromStorage() }
     val categorizedPhotos = categorizePhotos(photosByDate)
     val storyItems = getStoryItemsFromPhotos(categorizedPhotos)
 
-    // Filter photos based on search query
-    val filteredPhotos = filterPhotos(categorizedPhotos,photosByTag, searchQuery)
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-
+            .padding(
+                top = with(LocalDensity.current) { LocalWindowInsets.current.statusBars.top.toDp() },
+                bottom = with(LocalDensity.current) { LocalWindowInsets.current.navigationBars.bottom.toDp() }
+            )
     ) {
         GalleryTopBar(navController)
 
 
         SearchOrFilterBar(
-            isFilterActive = isFilterActive,
             searchQuery = searchQuery,
             onSearchQueryChange = { searchQuery = it },
-            onFilterToggle = { isFilterActive = !isFilterActive }
         )
         val storyItems = getStoryItemsFromPhotos(categorizedPhotos)
 
@@ -84,7 +76,7 @@ fun PhotoGalleryScreen(navController: NavController) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            filteredPhotos.forEach { (date, photos) ->
+            photosByDate.forEach { (date, photos) ->
                 item {
                     Text(
                         text = date,
@@ -108,10 +100,10 @@ fun PhotoGalleryScreen(navController: NavController) {
                                         navController.navigate("imageDetail/${Uri.encode(photo.uri.toString())}")
                                     }
                             ) {
-                                AsyncImage(
-                                    model = photo.uri,
-                                    modifier = Modifier.fillMaxSize(),
+                                Image(
+                                    painter = rememberAsyncImagePainter(photo.uri),
                                     contentDescription = null,
+                                    modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
                                 )
                             }
@@ -135,10 +127,9 @@ fun PhotoGalleryScreen(navController: NavController) {
 
 @Composable
 fun SearchOrFilterBar(
-    isFilterActive: Boolean,
+
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
-    onFilterToggle: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -146,26 +137,7 @@ fun SearchOrFilterBar(
             .padding(bottom = 16.dp, start = 8.dp, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (isFilterActive) {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                val categories = listOf("Favorites", "Selfies", "Travel", "Family")
-                items(categories) { category ->
-                    Text(
-                        text = category,
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.secondary)
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        color = MaterialTheme.colorScheme.primary,
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-        } else {
+
             TextField(
                 value = searchQuery,
                 onValueChange = onSearchQueryChange,
@@ -187,26 +159,7 @@ fun SearchOrFilterBar(
                 )
             )
         }
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        Box(
-            modifier = Modifier
-                .size(50.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.secondary)
-                .clickable { onFilterToggle() },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.filter_icon),
-                contentDescription = "Filter Icon",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
-            )
-        }
     }
-}
 
 @Composable
 fun StoryItemView(stories: List<StoryItem>, navController: NavController) {
@@ -261,7 +214,6 @@ data class Photo(
     val uri: Uri,
     val date: Date,
     val label: String,
-    val tag: String,
 )
 
 
@@ -293,11 +245,10 @@ fun categorizePhotos(photos: Map<String, List<MediaFile>>): Map<String, List<Pho
                 diffInDays < 365 -> "Vài tháng trước" // A few months ago
                 else -> "Vài năm trước" // A few years ago
             }
-            val tag = ""
 
             // Add the photo to the categorized list
             categorizedPhotos.computeIfAbsent(category) { mutableListOf() }
-                .add(Photo(uri = mediaFile.url ?: mediaFile.uri, date = photoDate, label =category, tag = tag))
+                .add(Photo(uri = mediaFile.uri, date = photoDate, label =category))
         }
     }
 
@@ -312,84 +263,4 @@ fun getStoryItemsFromPhotos(categorizedPhotos: Map<String, List<Photo>>): List<S
             StoryItem(imageUri = it.uri, label = category) // Create a StoryItem with the first photo of the category
         }
     }
-}
-
-fun filterPhotosByDate(categorizedPhotos: Map<String, List<Photo>>, searchQuery: String): Map<String, List<Photo>> {
-    return categorizedPhotos.mapValues { (date, photos) ->
-        photos.filter { photo ->
-            val queryLower = searchQuery.lowercase()
-
-            // Convert the Date to a string in a specific format for comparison
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val photoDateString = dateFormat.format(photo.date)
-
-            // Extract day, month, and year from photo date
-            val calendar = Calendar.getInstance().apply { time = photo.date }
-            val day = calendar.get(Calendar.DAY_OF_MONTH)
-            val month = calendar.get(Calendar.MONTH) + 1 // Months are 0-based
-            val year = calendar.get(Calendar.YEAR)
-
-            // Pattern matching for day, month, year queries
-            val matchesDay = "ngày $day" in queryLower
-            val matchesMonth = "tháng $month" in queryLower
-            val matchesDayMonth = "ngày $day tháng $month" in queryLower
-            val matchesYear = "năm $year" in queryLower
-
-            // Check if the search query matches the label or the formatted date
-            val matchesLabel = photo.label.lowercase().contains(queryLower)
-            val matchesDate = photoDateString.contains(queryLower)
-
-            // Return true if any condition matches
-            matchesLabel || matchesDate || matchesDay || matchesMonth || matchesDayMonth || matchesYear
-        }
-    }.filter { (_, photos) -> photos.isNotEmpty() }
-}
-
-fun filterPhotosByTag(categorizedPhotos: List<MediaFile>, searchQuery: String): Map<String, List<Photo>> {
-    // Chuyển đổi từ MediaFile sang Photo
-    val photos = categorizedPhotos.map { mediaFile ->
-        Photo(
-            uri = mediaFile.uri,
-            date = Date(mediaFile.dateAdded * 1000L), // Chuyển từ timestamp sang Date
-            label = mediaFile.name,
-            tag = mediaFile.tag
-        )
-    }
-
-    // Lọc ảnh theo tag
-    val queryLower = searchQuery.lowercase()
-    val filteredPhotos = photos.filter { photo ->
-        photo.tag.lowercase().contains(queryLower)
-    }
-
-    // Nhóm các ảnh đã lọc theo ngày
-    return filteredPhotos.groupBy { photo ->
-        SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(photo.date)
-    }
-}
-
-
-fun filterPhotos(categorizedPhotos: Map<String, List<Photo>>, categorizedPhotosTag: List<MediaFile>, searchQuery: String): Map<String, List<Photo>> {
-    val filteredByDate = filterPhotosByDate(categorizedPhotos, searchQuery)
-    val filteredByTag = filterPhotosByTag(categorizedPhotosTag, searchQuery)
-
-    // Combine the results from both filters
-    val combinedResults = mutableMapOf<String, List<Photo>>()
-
-    // Add photos filtered by date
-    filteredByDate.forEach { (date, photos) ->
-        combinedResults[date] = combinedResults.getOrDefault(date, emptyList()) + photos
-    }
-
-    // Add photos filtered by tag
-    filteredByTag.forEach { (date, photos) ->
-        combinedResults[date] = combinedResults.getOrDefault(date, emptyList()) + photos
-    }
-
-    // Remove duplicates
-    combinedResults.forEach { (date, photos) ->
-        combinedResults[date] = photos.distinctBy { it.uri }
-    }
-
-    return combinedResults.filter { (_, photos) -> photos.isNotEmpty() }
 }

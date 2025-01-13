@@ -20,8 +20,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import androidx.core.app.ActivityCompat
+import androidx.fragment.app.FragmentActivity
 import com.hcmus.presentation.AiGenerateImageViewModel
 import com.hcmus.data.appModule
+import com.hcmus.ui.display.editimage.MainViewModel
 import com.hcmus.ui.theme.MyApplicationTheme
 import com.hcmus.ui.theme.AiImageGeneratorTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -30,17 +32,16 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.context.GlobalContext.startKoin
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
   // ViewModel được khởi tạo bởi Koin
   val viewModel: AiGenerateImageViewModel by viewModel()
-
+  val mainViewModel: MainViewModel by viewModel()
   @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
   @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    // Khởi tạo Koin
     startKoin {
       androidContext(this@MainActivity)
       modules(appModule)

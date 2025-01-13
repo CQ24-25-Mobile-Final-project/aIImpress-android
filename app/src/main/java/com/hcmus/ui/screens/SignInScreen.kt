@@ -1,6 +1,7 @@
 package com.hcmus.ui.screens
 
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
@@ -29,6 +31,8 @@ import com.hcmus.ui.theme.MyApplicationTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import com.hcmus.R
 
 @Composable
 fun SignInScreen(
@@ -54,24 +58,14 @@ fun SignInScreen(
     Column(
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
-      Text(
-        text = "FOTO",
-        style = TextStyle(
-          color = BluePrimary,
-          fontSize = 28.sp
-        )
-      )
-      Text(
-        text = "Only Wallpaper app you will ever need ...!",
-        style = TextStyle(
-          color = Color.Gray,
-          fontSize = 14.sp
-        ),
-        modifier = Modifier.padding(top = 8.dp)
+      Image(
+        painter = painterResource(id = R.drawable.app_logo),
+        contentDescription = "Logo Icon",
+        modifier = Modifier.size(150.dp)
       )
     }
 
-    Spacer(modifier = Modifier.height(24.dp))
+    Spacer(modifier = Modifier.height(10.dp))
 
     // Sign-In Buttons
     Column(
@@ -107,9 +101,8 @@ fun SignInScreen(
       Spacer(modifier = Modifier.height(24.dp))
 
       SignInButton(
-        text = "Sign In",
+        text = "Sign Up",
         color = BluePrimary,
-        icon = Icons.Default.AccountBox,
         onClick = {
           when {
             email.isEmpty() -> {

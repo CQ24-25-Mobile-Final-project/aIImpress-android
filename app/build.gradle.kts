@@ -215,10 +215,9 @@ dependencies {
     implementation("com.burhanrashid52:photoeditor:3.0.2")
     implementation("com.google.android.gms:play-services-auth:19.0.0")
     implementation("io.github.mr0xf00:easycrop:0.1.1")
-    implementation("io.insert-koin:koin-android:3.5.0")
-    implementation("io.insert-koin:koin-androidx-compose:3.5.0")
+    implementation ("io.insert-koin:koin-android:3.4.0")
+    implementation ("io.insert-koin:koin-androidx-compose:3.4.0")
     implementation("io.github.rroohit:ImageCropView:3.0.1")
-    implementation("io.insert-koin:koin-androidx-compose:3.3.0")
 
     // Jetpack Compose
     implementation("androidx.compose.ui:ui:1.5.0")

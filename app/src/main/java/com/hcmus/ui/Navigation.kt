@@ -54,7 +54,6 @@ import com.hcmus.ui.display.PhotoGalleryScreen
 import com.hcmus.ui.display.categorizePhotos
 import com.hcmus.ui.secret.AuthenticationScreen
 import com.hcmus.ui.secret.SecretPhotoViewScreen
-import com.hcmus.ui.story.SharedGalleryScreen
 import com.hcmus.auth.AuthResponse
 import com.hcmus.auth.AuthenticationManager
 import com.hcmus.data.CloudFirestoreService
@@ -289,37 +288,18 @@ fun Navigation(viewModel: AiGenerateImageViewModel, navController: NavHostContro
             )
         }
 
-        composable("shareScreen") { SharedGalleryScreen(navController = navController) }
 
         composable("galleryScreen") { PhotoGalleryScreen(navController = navController) }
 
         composable("appContent") { AppContent(navController = navController) }
         composable(
-            route = "storyUI/{category}",
-            arguments = listOf(navArgument("category") {
+            route = "imageDetail/{photoUri}",
+            arguments = listOf(navArgument("photoUri") {
                 type = NavType.StringType
             })
         ) { backStackEntry ->
-            val category = backStackEntry.arguments?.getString("category") ?: ""
-
-            val photosForCategory = categorizedPhotos[category]
-            composable(
-                route = "imageDetail/{photoUri}",
-                arguments = listOf(navArgument("photoUri") {
-                    type = NavType.StringType
-                })
-            ) { backStackEntry ->
-                val photoUri = backStackEntry.arguments?.getString("photoUri") ?: ""
-                ImageDetailScreen(photoUri = photoUri, navController = navController)
-            }
-
-            if (photosForCategory != null) {
-                StoryUI(
-                    navController = navController,
-                    startIndex = 0,
-                    photos = photosForCategory
-                )
-            }
+            val photoUri = backStackEntry.arguments?.getString("photoUri") ?: ""
+            ImageDetailScreen(photoUri = photoUri, navController = navController)
         }
         composable(
             route = "editImage/{photoUri}",
@@ -350,7 +330,6 @@ fun Navigation(viewModel: AiGenerateImageViewModel, navController: NavHostContro
             ImagePickerScreen(context = LocalContext.current)
         }
 
-        composable("shareScreen") { SharedGalleryScreen(navController = navController) }
 
         composable("galleryScreen") { PhotoGalleryScreen(navController = navController) }
 
