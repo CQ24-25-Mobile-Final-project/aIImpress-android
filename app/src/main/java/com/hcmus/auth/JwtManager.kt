@@ -7,6 +7,7 @@ import io.fusionauth.jwt.hmac.HMACSigner
 import io.fusionauth.jwt.hmac.HMACVerifier
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import io.fusionauth.jwt.JWTExpiredException
 
 class JwtManager {
     val signer: Signer = HMACSigner.newSHA256Signer("too many secrets")

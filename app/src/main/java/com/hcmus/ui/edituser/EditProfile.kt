@@ -1,6 +1,6 @@
 package com.hcmus.ui.edituser
 
-
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,28 +8,64 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
+import com.hcmus.data.model.Gender
+import com.hcmus.data.model.Profile
+import com.hcmus.ui.viewmodel.ProfileViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditProfileScreen() {
+fun EditProfileScreen(navController: NavController, profileViewModel: ProfileViewModel = viewModel()) {
+    val coroutineScope = rememberCoroutineScope()
+    val profileState = remember { mutableStateOf<Profile?>(null) }
+    val showSuccessMessage = remember { mutableStateOf(false) }
+
+    // Get the current user's email
+    val currentUserEmail = FirebaseAuth.getInstance().currentUser?.email
+
+    // Load profile data when the screen is displayed
+    LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            val profile =
+                currentUserEmail?.let { profileViewModel.getProfileByEmail(it) } // Assuming profile ID is 1
+            profileState.value = profile
+        }
+    }
+
+    val fullNameState = remember { mutableStateOf(TextFieldValue("")) }
+    val emailState = remember { mutableStateOf(TextFieldValue(currentUserEmail ?: "")) }
+    val phoneNumberState = remember { mutableStateOf(TextFieldValue("")) }
+    val countryState = remember { mutableStateOf("") }
+    val genderState = remember { mutableStateOf(Gender.Male) }
+
+    // Update the states when profile data is available
+    LaunchedEffect(profileState.value) {
+        profileState.value?.let { profile ->
+            fullNameState.value = TextFieldValue(profile.fullName)
+            emailState.value = TextFieldValue(profile.email)
+            phoneNumberState.value = TextFieldValue(profile.phoneNumber)
+            countryState.value = profile.country
+            genderState.value = profile.gender
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Edit Profile", fontSize = 20.sp, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { /* Handle back navigation */ }) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back"
@@ -48,20 +84,58 @@ fun EditProfileScreen() {
                 .background(Color(0xFFF8F8F8)),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            EditableTextField(label = "Full name", value = "Puerto Rico")
-            EditableTextField(label = "Email", value = "youremail@domain.com")
-            EditableTextField(label = "Phone number", value = "123-456-7890")
-            DropdownMenuField(label = "Country", options = listOf("United States", "Việt Nam"))
-            DropdownMenuField(label = "Gender", options = listOf("Male", "Female", "Other"))
+            AvatarSection()
+            EditableTextField(label = "Full name", textState = fullNameState)
+            NonEditableTextField(label = "Email", textState = emailState)
+            EditableTextField(label = "Phone number", textState = phoneNumberState)
+            DropdownMenuField(label = "Country", options = listOf("United States", "Việt Nam"), selectedOption = countryState)
+            DropdownMenuField(label = "Gender", options = Gender.values().toList(), selectedOption = genderState)
             Spacer(modifier = Modifier.weight(1f))
-            SubmitButton()
+            SubmitButton(
+                onClick = {
+                    val profile = Profile(
+                        id = profileState.value?.id ?: 0, 
+                        fullName = fullNameState.value.text,
+                        email = emailState.value.text,
+                        phoneNumber = phoneNumberState.value.text,
+                        country = countryState.value,
+                        gender = genderState.value
+                    )
+                    profileViewModel.insert(profile)
+                }
+            )
         }
     }
 }
 
 @Composable
-fun EditableTextField(label: String, value: String) {
-    val textState = remember { mutableStateOf(TextFieldValue(value)) }
+fun AvatarSection() {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(bottom = 16.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .background(Color.Gray, shape = RoundedCornerShape(60.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            // Placeholder for avatar
+            Text("Avatar", color = Color.White)
+        }
+        Button(
+            onClick = { /* Handle change avatar */ },
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007BFF)),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Text("Change Avatar", color = Color.White)
+        }
+    }
+}
+
+@Composable
+fun EditableTextField(label: String, textState: MutableState<TextFieldValue>) {
     OutlinedTextField(
         value = textState.value,
         onValueChange = { textState.value = it },
@@ -73,12 +147,24 @@ fun EditableTextField(label: String, value: String) {
 }
 
 @Composable
-fun DropdownMenuField(label: String, options: List<String>) {
+fun NonEditableTextField(label: String, textState: MutableState<TextFieldValue>) {
+    OutlinedTextField(
+        value = textState.value,
+        onValueChange = {},
+        label = { Text(label) },
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        singleLine = true,
+        enabled = false
+    )
+}
+
+@Composable
+fun <T> DropdownMenuField(label: String, options: List<T>, selectedOption: MutableState<T>) {
     val expanded = remember { mutableStateOf(false) }
-    val selectedOption = remember { mutableStateOf(options.first()) }
     Box(modifier = Modifier.fillMaxWidth()) {
         OutlinedTextField(
-            value = selectedOption.value,
+            value = selectedOption.value.toString(),
             onValueChange = {},
             label = { Text(label) },
             modifier = Modifier.fillMaxWidth(),
@@ -100,7 +186,7 @@ fun DropdownMenuField(label: String, options: List<String>) {
                         selectedOption.value = option
                         expanded.value = false
                     },
-                    text = { Text(option) }
+                    text = { Text(option.toString()) }
                 )
             }
         }
@@ -108,9 +194,9 @@ fun DropdownMenuField(label: String, options: List<String>) {
 }
 
 @Composable
-fun SubmitButton() {
+fun SubmitButton(onClick: () -> Unit) {
     Button(
-        onClick = { /* Handle submit action */ },
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .height(50.dp),
@@ -119,10 +205,4 @@ fun SubmitButton() {
     ) {
         Text("SUBMIT", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewEditProfileScreen() {
-    EditProfileScreen()
 }

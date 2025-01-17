@@ -6,11 +6,13 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.hcmus.ui.display.MediaFile
+import com.hcmus.data.model.Profile
 
-@Database(entities = [MediaFile::class], version = 1)
-@TypeConverters(UriTypeConverter::class)
+@Database(entities = [MediaFile::class, Profile::class], version = 1)
+@TypeConverters(UriTypeConverter::class, GenderTypeConverter::class)
 abstract class MediaFileDatabase : RoomDatabase() {
     abstract fun mediaFileDao(): MediaFileDao
+    abstract fun profileDao(): ProfileDao
 
     companion object {
         @Volatile
