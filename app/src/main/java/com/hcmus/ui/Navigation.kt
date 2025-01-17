@@ -59,8 +59,11 @@ import com.hcmus.ui.secret.SecretPhotoViewScreen
 import com.hcmus.ui.story.SharedGalleryScreen
 import com.hcmus.auth.AuthResponse
 import com.hcmus.auth.AuthenticationManager
+import com.hcmus.auth.JwtManager
 import com.hcmus.data.CloudFirestoreService
 import com.hcmus.data.ContextStore
+import com.hcmus.data.model.Credential
+import com.hcmus.data.model.CredentialDatabase
 import com.hcmus.data.model.User
 import com.hcmus.ui.Trash.TrashAlbumScreen
 import com.hcmus.ui.display.ImageDescriptionScreen
@@ -111,17 +114,24 @@ fun Navigation(viewModel: AiGenerateImageViewModel, navController: NavHostContro
     }
     val coroutineScope = rememberCoroutineScope()
     val cloudFirestore = CloudFirestoreService()
+    val credentialRepository = CredentialDatabase.getInstance(context).credentialRepository()
     var isLoggedIn by remember { mutableStateOf(false) }
+    val jwtManager = JwtManager()
 
     // Load categorized photos when the navigation starts
     LaunchedEffect(Unit) {
-        if (isLoggedIn) {
+        val cred = credentialRepository.get()
+        if (cred?.token !== null && jwtManager.verify(cred.token)) {
             photoGalleryViewModel.fetchCategorizedPhotos(context)
+            ContextStore.set(context, "email", cred.email)
+            isLoggedIn = true
+        } else {
+            credentialRepository.delete()
         }
     }
 
     val categorizedPhotos by photoGalleryViewModel.categorizedPhotos.collectAsState()
-    NavHost(navController = navController, startDestination = "login") {
+    NavHost(navController = navController, startDestination = if (isLoggedIn) "gallery" else "login") {
         composable("generate") {
             GenerateImageScreen(
                 viewModel = viewModel,
@@ -145,6 +155,12 @@ fun Navigation(viewModel: AiGenerateImageViewModel, navController: NavHostContro
 
                             // Lưu email người dùng vào ContextStore
                             ContextStore.set(context, "email", email)
+
+                            // save to db
+                            val creds = Credential()
+                            creds.email = email
+                            creds.token = jwtManager.sign()
+                            credentialRepository.insert(creds)
                         } else {
                             Log.d("Login", "Error: $response")
                             Toast.makeText(context, "Login Failed", Toast.LENGTH_SHORT).show()

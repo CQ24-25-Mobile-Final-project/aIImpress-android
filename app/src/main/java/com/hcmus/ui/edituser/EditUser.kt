@@ -17,10 +17,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.Image
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.hcmus.ui.components.CustomBottomBar // Kiểm tra xem nơi khai báo
 import com.hcmus.R
+import com.hcmus.data.model.CredentialDatabase
 
 @Composable
 fun ProfileScreen(navController: NavController) {
@@ -145,6 +147,8 @@ fun ProfileOptionSection(
 }
 @Composable
 fun ProfileBody(navController: NavController) {
+    val credentialRepository = CredentialDatabase.getInstance(LocalContext.current).credentialRepository()
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -172,6 +176,16 @@ fun ProfileBody(navController: NavController) {
         ProfileOptionSection("Help & Support")
         ProfileOptionSection("Contact us")
         ProfileOptionSection("Privacy policy")
+        Spacer(modifier = Modifier.height(8.dp))
+
+        ProfileOptionSection(
+            title = "Logout",
+            onClick = {
+                credentialRepository.delete()
+                navController.navigate("login")
+            }
+        )
+
     }
 }
 
