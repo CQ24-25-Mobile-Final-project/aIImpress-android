@@ -36,6 +36,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.hcmus.domain.Screen
 import com.hcmus.presentation.AiGenerateImageViewModel
 import com.hcmus.presentation.screens.GenerateImageScreen
@@ -126,7 +128,6 @@ fun Navigation(viewModel: AiGenerateImageViewModel, navController: NavHostContro
                 navController = navController
             )
         }
-
 
         composable("login") {
             LoginScreen(
@@ -233,9 +234,6 @@ fun Navigation(viewModel: AiGenerateImageViewModel, navController: NavHostContro
             )
         }
 
-
-
-
         composable("remove_background_screen") {
             ImageSegmenter(navController = navController)
         }
@@ -303,15 +301,6 @@ fun Navigation(viewModel: AiGenerateImageViewModel, navController: NavHostContro
             val category = backStackEntry.arguments?.getString("category") ?: ""
 
             val photosForCategory = categorizedPhotos[category]
-            composable(
-                route = "imageDetail/{photoUri}",
-                arguments = listOf(navArgument("photoUri") {
-                    type = NavType.StringType
-                })
-            ) { backStackEntry ->
-                val photoUri = backStackEntry.arguments?.getString("photoUri") ?: ""
-                ImageDetailScreen(photoUri = photoUri, navController = navController)
-            }
 
             if (photosForCategory != null) {
                 StoryUI(
@@ -321,6 +310,17 @@ fun Navigation(viewModel: AiGenerateImageViewModel, navController: NavHostContro
                 )
             }
         }
+
+        composable(
+            route = "imageDetail/{photoUri}",
+            arguments = listOf(navArgument("photoUri") {
+                type = NavType.StringType
+            })
+        ) { backStackEntry ->
+            val photoUri = backStackEntry.arguments?.getString("photoUri") ?: ""
+            ImageDetailScreen(photoUri = photoUri, navController = navController)
+        }
+
         composable(
             route = "editImage/{photoUri}",
             arguments = listOf(navArgument("photoUri") {

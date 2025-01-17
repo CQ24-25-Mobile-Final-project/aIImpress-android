@@ -17,6 +17,4 @@ class CloudFirestoreService {
   fun addImages(email: String, data: List<MediaFile>) {
     db.document(email).set(mapOf("images" to data))
   }
-
-
 }
