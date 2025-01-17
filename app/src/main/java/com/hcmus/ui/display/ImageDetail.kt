@@ -7,12 +7,15 @@ import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -34,32 +37,34 @@ import com.hcmus.R
 import com.hcmus.ui.textrecognize.TextRecognitionResultBar
 import com.hcmus.ui.textrecognize.recognizeText
 import com.hcmus.ui.album.AlbumViewModel
-import com.hcmus.ui.components.MediaFileManager
-import com.hcmus.ui.components.getPhotoDetail
+import com.hcmus.ui.viewmodel.MediaFileViewModel
+import kotlinx.coroutines.runBlocking
 import showMoreOptions
-import com.hcmus.ui.components.addTag1 as addTag1
-
 
 @Composable
 fun ImageDetailScreen(photoUri: String, navController: NavController) {
     Log.d("ImageGalleryScreen", "Calling SmartAlbumOrganizer with URI: $photoUri")
-
     val decodedUri = Uri.decode(photoUri)
     val showResult = remember { mutableStateOf(false) }
     val recognizedText = remember { mutableStateOf("") }
     val context = LocalContext.current
-
     val albumViewModel: AlbumViewModel = hiltViewModel()
     val photoViewModel: PhotoViewModel = viewModel(
         factory = PhotoViewModelFactory(context)
     )
+
+    val mediaFileViewModel: MediaFileViewModel = viewModel()
+    val tagName = runBlocking {
+        mediaFileViewModel.getTagByUri(photoUri)
+    }
+
 
     Column(
         modifier = Modifier
             .fillMaxSize()
     ) {
         // Top bar
-        DetailTopBar(navController, photoUri = photoUri, albumViewModel, photoViewModel)
+        DetailTopBar(navController, photoUri = photoUri, albumViewModel, photoViewModel, mediaFileViewModel)
 
         // Box to overlay button or text result on image
         Box(
@@ -74,6 +79,19 @@ fun ImageDetailScreen(photoUri: String, navController: NavController) {
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
+            if (tagName != "") {
+                Text(
+                    text = " " + tagName.toString() + " ",
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .offset(x = 4.dp, y = 4.dp) // Tạo margin với offset
+                        .border(1.dp, Color.Gray, RoundedCornerShape(6.dp))
+                        .background(Color.LightGray.copy(alpha = 0.4f), shape = RoundedCornerShape(6.dp))
+                )
+            }
+
 
 
             if (!showResult.value) {
@@ -134,10 +152,9 @@ fun ImageDetailScreen(photoUri: String, navController: NavController) {
 // TopBar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailTopBar(navController: NavController, photoUri: String, albumViewModel: AlbumViewModel, photoViewModel: PhotoViewModel) {
+fun DetailTopBar(navController: NavController, photoUri: String, albumViewModel: AlbumViewModel, photoViewModel: PhotoViewModel, mediaFileViewModel: MediaFileViewModel) {
     val isHeartPressed = remember { mutableStateOf(false) }
     val isTagPressed = remember { mutableStateOf(false) }
-    val context = LocalContext.current
 
     val photoDetail = photoViewModel.photos.value?.find { it.uri.toString() == photoUri }
     if (photoDetail != null) {
@@ -146,8 +163,22 @@ fun DetailTopBar(navController: NavController, photoUri: String, albumViewModel:
         }
     }
 
+    LaunchedEffect(photoUri) {
+        val tag = mediaFileViewModel.getTagByUri(photoUri)
+        Log.d("DetailTopBar", "Tag value: $tag, Type of tag: ${tag?.let { it::class.simpleName } ?: "null"}")
+
+        if (tag != "") {
+            isTagPressed.value = true
+        } else {
+            isTagPressed.value = false
+        }
+    }
+
     val isFavorite = albumViewModel.albums.value?.any { it.first == "Favorite" && it.second.contains(Uri.parse(photoUri)) } == true
     isHeartPressed.value = isFavorite
+
+    val showTagPicker = remember { mutableStateOf(false) }
+
     TopAppBar(
         title = {
             Row(
@@ -188,12 +219,16 @@ fun DetailTopBar(navController: NavController, photoUri: String, albumViewModel:
                         .clickable(
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() }
-
                         ) {
-                            isTagPressed.value = !isTagPressed.value
-                            Log.d("DetailTopBar", "isTagPressed value: ${isTagPressed.value}")
-                            Log.d("DetailTopBar", "photoUri value: $photoUri")
-                            photoViewModel.addTag( photoUri, "Favorite" )
+                            if (isTagPressed.value) {
+                                // Nếu tag đã có, xóa tag
+                                isTagPressed.value = false
+                                mediaFileViewModel.removeTag(photoUri)
+                                Log.d("DetailTopBar", "Tag removed for photoUri: $photoUri")
+                            } else {
+                                // Hiển thị tag picker
+                                showTagPicker.value = true
+                            }
                         },
                     tint = if (isTagPressed.value) Color.Yellow else Color.Gray
                 )
@@ -221,13 +256,48 @@ fun DetailTopBar(navController: NavController, photoUri: String, albumViewModel:
                 )
             }
         },
-        /*colors = TopAppBarDefaults.smallTopAppBarColors(
-            containerColor = MaterialTheme.colorScheme.background
-        )*/
     )
+
+    // Hiển thị tag picker dialog nếu showTagPicker là true
+    if (showTagPicker.value) {
+        AlertDialog(
+            onDismissRequest = { showTagPicker.value = false },
+            title = { Text("Choose a Tag") },
+            text = {
+                Column {
+                    val tags = listOf(
+                        "Favorite", "Work", "Personal",
+                        "Important", "Plant", "To-Do",
+                        "Family", "Friends", "Pet",
+                        "Shopping", "Travel", "Sunset"
+                    )
+                    tags.forEach { tag ->
+                        Text(
+                            text = tag,
+                            modifier = Modifier
+                                .clickable {
+                                    // Thêm tag cho ảnh
+                                    photoViewModel.addTag(photoUri, tag)
+                                    mediaFileViewModel.updateTag(photoUri, tag)
+                                    isTagPressed.value = true  // Cập nhật trạng thái tag
+                                    showTagPicker.value = false
+                                    Log.d("DetailTopBar", "Tag added for photoUri: $photoUri, Tag: $tag")
+                                }
+                                .padding(8.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { showTagPicker.value = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
-
-
 
 // BottomBar with Navigation
 @Composable
