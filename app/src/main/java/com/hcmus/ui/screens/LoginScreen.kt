@@ -29,14 +29,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hcmus.ui.theme.BluePrimary
-import com.hcmus.ui.theme.MyApplicationTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.clickable
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.platform.LocalContext
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
@@ -56,7 +55,6 @@ fun LoginScreen(
   var email by remember { mutableStateOf("") }
   var password by remember { mutableStateOf("") }
   val context = LocalContext.current
-  val activity = context as? Activity
   val auth = FirebaseAuth.getInstance()
 
   // Configure Google Sign-In options for Firebase
@@ -67,15 +65,14 @@ fun LoginScreen(
 
   val googleSignInClient = GoogleSignIn.getClient(context, googleSignInOptions)
 
-  // Launcher for Google Sign-In activity
   val googleSignInLauncher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.StartActivityForResult()
   ) { result ->
     if (result.resultCode == Activity.RESULT_OK) {
       val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-      handleSignInResult(task, auth, onLoginGoogle)  // Xử lý kết quả đăng nhập
+      handleSignInResult(task, auth, onLoginGoogle)
     } else {
-      onLoginGoogle(null) // Pass null if login failed
+      onLoginGoogle(null)
     }
   }
 

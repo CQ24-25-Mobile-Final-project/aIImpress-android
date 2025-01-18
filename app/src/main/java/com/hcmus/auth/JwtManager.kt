@@ -16,13 +16,17 @@ class JwtManager {
         val jwt = JWT().setIssuer("www.cukhoaimon.com")
             .setSubject("deptrai")
             .setIssuedAt(ZonedDateTime.now(ZoneOffset.UTC))
-            .setExpiration(ZonedDateTime.now(ZoneOffset.UTC).plusMinutes(60))
+            .setExpiration(ZonedDateTime.now(ZoneOffset.UTC).plusDays(15))
 
         return JWT.getEncoder().encode(jwt, signer)
     }
 
     fun verify(token: String): Boolean {
-        return JWT.getDecoder().decode(token, verifier).isExpired == false
+        return try {
+            JWT.getDecoder().decode(token, verifier).isExpired == false
+        } catch (e: Exception) {
+            false
+        }
     }
 
 

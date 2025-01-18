@@ -2,6 +2,7 @@ package com.hcmus.ui.display
 
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -36,6 +37,7 @@ import com.hcmus.ui.album.AlbumViewModel
 import com.hcmus.ui.components.MediaFileManager
 import com.hcmus.ui.components.getPhotoDetail
 import showMoreOptions
+import java.net.URI
 import com.hcmus.ui.components.addTag1 as addTag1
 
 
@@ -233,6 +235,7 @@ fun DetailTopBar(navController: NavController, photoUri: String, albumViewModel:
 fun DetailBottomBar(navController: NavController, photoUri: String) {
     val selectedItem = remember { mutableStateOf(0) }
     val showDialog = remember { mutableStateOf(false) }
+    val context = LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -268,11 +271,18 @@ fun DetailBottomBar(navController: NavController, photoUri: String) {
         )
 
         BottomBarItem(
-            isSelected = selectedItem.value == 3,
+            isSelected = selectedItem.value == 6,
             iconRes = R.drawable.share_icon,
-            contentDescription = "Share Icon",
-            onClick = { selectedItem.value = 3 },
-
+            contentDescription = "Share icon",
+            onClick = {
+                selectedItem.value = 6
+                val shareIntent: Intent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_STREAM, Uri.parse(photoUri))
+                    type = "image/jpeg"
+                }
+                context.startActivity(Intent.createChooser(shareIntent, "Share Image"))
+            }
         )
 
         BottomBarItem(
