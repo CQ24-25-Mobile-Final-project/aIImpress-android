@@ -255,7 +255,7 @@ fun Navigation(viewModel: AiGenerateImageViewModel, navController: NavHostContro
         }
         composable("gallery") { PhotoGalleryScreen(navController = navController) }
         composable("editUser") { ProfileScreen(navController = navController) }
-        composable("editProfile") { EditProfileScreen() }
+        composable("editProfile") { EditProfileScreen(navController = navController) }
         composable("authentication") { AuthenticationScreen(navController = navController) }
 
         composable("view") {
