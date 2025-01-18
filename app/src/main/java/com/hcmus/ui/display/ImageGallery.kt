@@ -71,9 +71,6 @@ fun PhotoGalleryScreen(navController: NavController) {
         }
     }
 
-    // Filter photos based on search query
-    val filteredPhotos = filterPhotos(categorizedPhotos, photosByTag, searchQuery, mediaFileViewModel)
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -102,7 +99,7 @@ fun PhotoGalleryScreen(navController: NavController) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            filteredPhotos.forEach { (date, photos) ->
+            photosByDate.forEach { (date, photos) ->
                 item {
                     Text(
                         text = date,

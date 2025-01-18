@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import androidx.core.app.ActivityCompat
+import androidx.fragment.app.FragmentActivity
 import com.hcmus.presentation.AiGenerateImageViewModel
 import com.hcmus.data.appModule
 import com.hcmus.ui.theme.MyApplicationTheme
