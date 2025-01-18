@@ -28,6 +28,7 @@ import coil.compose.AsyncImage
 import com.google.firebase.firestore.FirebaseFirestore
 import com.hcmus.data.ContextStore
 import com.hcmus.data.model.Album
+import com.hcmus.ui.components.CustomBottomBar
 
 @Composable
 fun DisplayPhotoInAlbumScreen(navController: NavController, context: Context, albumName: String) {
@@ -48,14 +49,21 @@ fun DisplayPhotoInAlbumScreen(navController: NavController, context: Context, al
             photoList = photos
         }
     }
-    val photoCount = photoList.size
-    val videoCount = 0 // Giả sử không có video trong album này
 
     Scaffold(
-        topBar = {
-            ReusableTopBar(
-                albumName = albumName,
-                onBackPressed = { navController.popBackStack() }
+        bottomBar = {
+            var selectedIndex = 2
+            CustomBottomBar(
+                selectedIndex = selectedIndex,
+                onTabSelected = { index ->
+                    selectedIndex = index
+                    if (index == 3) navController.navigate("shareScreen")
+                    if (index == 0) navController.navigate("gallery")
+                },
+                onAddClick = {
+                    navController.navigate("appContent")
+                },
+                navController = navController
             )
         },
         content = { paddingValues ->
@@ -110,12 +118,8 @@ fun DisplayPhotoInAlbumScreen(navController: NavController, context: Context, al
                             .padding(bottom = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "$photoCount Photo${if (photoCount > 1) "s" else ""}, $videoCount Video${if (videoCount > 1) "s" else ""}",
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = 16.sp
-                            )
-                        )
+
+
                     }
                 }
             }

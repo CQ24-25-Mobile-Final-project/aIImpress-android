@@ -2,6 +2,7 @@ package com.hcmus.ui.secret
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -37,11 +38,13 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.layout.ContentScale
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.rememberAsyncImagePainter
 import com.hcmus.data.ContextStore
 import com.hcmus.data.model.Album
-
-
+import com.hcmus.ui.theme.BluePrimary
+import com.hcmus.ui.theme.BlueSecondary
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,12 +63,11 @@ fun SecretPhotoViewScreen(navController: NavController, context: Context, onBack
 
     var albumNameInput by remember { mutableStateOf("") } // Biến lưu tên album nhập từ người dùng
 
-    val menuItems = listOf("Create Folder", "Add Items", "Ascending(A-Z)", "Descending(Z-A)")
+    val menuItems = listOf("Create Folder", "Add Items")
     val menuIcons = listOf(
         Icons.Filled.Folder,    // Create Folder
         Icons.Filled.Add,       // Add Items
-        Icons.Filled.ArrowUpward, // Ascending (A-Z)
-        Icons.Filled.ArrowDownward // Descending (Z-A)
+
     )
 
     val fabMenuItems = listOf("New Album", "Import Photos")
@@ -96,7 +98,7 @@ fun SecretPhotoViewScreen(navController: NavController, context: Context, onBack
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Gallery Vault") },
+                title = { Text("Secret Album") },
                 navigationIcon = {
                     IconButton(onClick = {
                         // Điều hướng về màn hình chính và xóa các màn hình trung gian
@@ -104,7 +106,12 @@ fun SecretPhotoViewScreen(navController: NavController, context: Context, onBack
                             popUpTo("gallery") { inclusive = false }
                         }
                     }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back",tint=Color.Black)
+                        Icon(
+                            painter = painterResource(id = R.drawable.back_icon),
+                            contentDescription = "Back",
+                            tint = BluePrimary,
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 },
                 actions={// cái nút ba chấm
@@ -140,7 +147,7 @@ fun SecretPhotoViewScreen(navController: NavController, context: Context, onBack
                                             modifier = Modifier
                                                 .padding(vertical = 8.dp)
                                                 .weight(1f),
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 22.sp)
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp)
                                         )
 
                                         Icon(
@@ -170,20 +177,14 @@ fun SecretPhotoViewScreen(navController: NavController, context: Context, onBack
                 }
             )
         },
-        floatingActionButton={
-            FloatingActionButton(onClick = {
-                showMenu = !showMenu // Chuyển đổi trạng thái hiển thị menu
-            }) {
-                Icon(Icons.Filled.Add, contentDescription = "Create Album")
-            }
-        },
+
 
         content = { paddingValues ->  // Thêm padding vào content
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(8.dp)
+                    .padding(3.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -225,7 +226,8 @@ fun SecretPhotoViewScreen(navController: NavController, context: Context, onBack
                             ) {
                                 AlbumItemGridView(
                                     albumName = album.name,
-                                    photoCount = album.images.size
+                                    photoCount = album.images.size,
+                                    firstPhotoUri = album.images.getOrNull(0)?.let { Uri.parse(it) }
                                 )
                             }
                         }
@@ -254,7 +256,8 @@ fun SecretPhotoViewScreen(navController: NavController, context: Context, onBack
                                 AlbumItemListView(
                                     albumName = album.name,
                                     photoCount = album.images.size,
-                                ) // Chỉnh sửa để thêm số lượng ảnh thực tế
+                                    firstPhotoUri = album.images.getOrNull(0)?.let { Uri.parse(it) }
+                                )
                             }
                         }
                     }
@@ -313,7 +316,7 @@ fun SecretPhotoViewScreen(navController: NavController, context: Context, onBack
                     }
                 )
                 if (index < fabMenuItems.size - 1) {
-                    Divider(color = Color.LightGray, thickness = 1.dp)
+                    Divider(color = BlueSecondary, thickness = 1.dp)
                 }
             }
         }
@@ -331,7 +334,7 @@ fun SecretPhotoViewScreen(navController: NavController, context: Context, onBack
                         placeholder = {
                             Text(
                                 text = "Folder Name",
-                                color = Color.Gray// Màu chữ placeholder khi chưa nhập
+                                color = Color.White
                             )
                         },
                         modifier= Modifier.fillMaxWidth(),
@@ -354,7 +357,7 @@ fun SecretPhotoViewScreen(navController: NavController, context: Context, onBack
                     }
                 ) {
                     Text("Create",
-                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp)
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp)
                     )
 
                 }
@@ -367,12 +370,12 @@ fun SecretPhotoViewScreen(navController: NavController, context: Context, onBack
                     }
                 ) {
                     Text("Cancel",
-                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp)
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp)
                     )
 
                 }
             },
-            containerColor = Color.LightGray
+            containerColor = Color.White
 
         )
     }else if (showLongPressDialog) {
@@ -486,16 +489,21 @@ fun SecretPhotoViewScreen(navController: NavController, context: Context, onBack
 }
 
 @Composable
-fun AlbumItemListView(albumName: String, photoCount: Int) {
+fun AlbumItemListView(albumName: String, photoCount: Int, firstPhotoUri: Uri?) {
     Row (verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
             .padding(0.dp, 0.dp, 8.dp, 4.dp)) {
         Image(
-            painter = painterResource(id = R.drawable.wallpaper),
+            painter = if (firstPhotoUri != null) {
+                rememberAsyncImagePainter(model = firstPhotoUri)
+            } else {
+                painterResource(id = R.drawable.avatar)
+            },
             contentDescription = "wallpaper of an item",
             modifier = Modifier
                 .size(100.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .fillMaxWidth(),
+            contentScale = ContentScale.Crop
         )
         Spacer(modifier = Modifier.width(12.dp))
         Column (
@@ -506,28 +514,32 @@ fun AlbumItemListView(albumName: String, photoCount: Int) {
         ) {
             Text(text = albumName,
                 style = MaterialTheme.typography.titleMedium)
-            Text(text = photoCount.toString() + if(photoCount == 1)  " photo" else " photos",
+            Text(text = photoCount.toString() + if(photoCount == 1 || photoCount == 0)  " photo" else " photos",
                 style = MaterialTheme.typography.bodySmall
             )
         }
     }
 }
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
-fun AlbumItemGridView(albumName: String, photoCount: Int) {
+fun AlbumItemGridView(albumName: String, photoCount: Int, firstPhotoUri: Uri?) {
     Column {
         BoxWithConstraints(
             modifier = Modifier.fillMaxWidth()
                 .wrapContentHeight()
         ) {
-            val screenWidth = maxWidth
-
             Image(
-                painter = painterResource(id = R.drawable.wallpaper),
+                painter = if (firstPhotoUri != null) {
+                    rememberAsyncImagePainter(model = firstPhotoUri)
+                } else {
+                    painterResource(id = R.drawable.avatar)
+                },
                 contentDescription = null,
                 modifier = Modifier
-                    .size(screenWidth * 1f)
-                    .clip(RoundedCornerShape(16.dp))
+                    .size(maxWidth * 1f)
+                    .fillMaxWidth(),
+                contentScale = ContentScale.Crop
             )
         }
         Spacer(modifier = Modifier.width(12.dp))
@@ -539,11 +551,9 @@ fun AlbumItemGridView(albumName: String, photoCount: Int) {
             Text(text = albumName,
                 style = MaterialTheme.typography.titleMedium)
 
-            Text(text = photoCount.toString() + if(photoCount == 1)  " photo" else " photos",
+            Text(text = photoCount.toString() + if(photoCount == 1 || photoCount == 0)  " photo" else " photos",
                 style = MaterialTheme.typography.bodySmall
             )
         }
     }
 }
-
-

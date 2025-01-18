@@ -4,6 +4,8 @@ import android.app.Activity
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,14 +31,20 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hcmus.ui.theme.BluePrimary
+import com.hcmus.ui.theme.MyApplicationTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.clickable
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -89,16 +97,14 @@ fun LoginScreen(
     Column(
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
-      Text(
-        text = "FOTO",
-        style = TextStyle(
-          color = BluePrimary,
-          fontSize = 28.sp
-        )
+      Image(
+        painter = painterResource(id = R.drawable.app_logo),
+        contentDescription = "Logo Icon",
+        modifier = Modifier.size(150.dp)
       )
     }
 
-    Spacer(modifier = Modifier.height(24.dp))
+    Spacer(modifier = Modifier.height(10.dp))
 
     // Sign-In Buttons
     Column(
@@ -127,7 +133,6 @@ fun LoginScreen(
       SignInButton(
         text = "Login",
         color = BluePrimary,
-        icon = Icons.Default.AccountBox,
         onClick = { onLoginEmail(email, password) }
       )
 
@@ -141,7 +146,9 @@ fun LoginScreen(
 
       SignInButton(
         text = "Continue With Google",
-        color = Color.White,
+        color = Color.Transparent,
+        iconPainter = painterResource(id = R.drawable.google_icon), // Icon Google
+        border = true, // Hiển thị border
         onClick = {
           val signInIntent = googleSignInClient.signInIntent
           googleSignInLauncher.launch(signInIntent)  // Launch Google Sign-In
@@ -178,23 +185,46 @@ fun SignInButton(
   text: String,
   color: Color,
   icon: ImageVector? = null,
+  iconPainter: Painter? = null,
+  border: Boolean = false,
   onClick: () -> Unit
 ) {
-  // TODO: add icon
   Button(
     onClick = onClick,
     modifier = Modifier
       .fillMaxWidth()
       .height(48.dp),
-    colors = ButtonDefaults.buttonColors(containerColor = color)
+    colors = ButtonDefaults.buttonColors(containerColor = color),
+    shape = RoundedCornerShape(100.dp), // Góc bo của button
+    border = if (border) BorderStroke(1.dp, BluePrimary) else null
   ) {
     Row(
       verticalAlignment = Alignment.CenterVertically,
       horizontalArrangement = Arrangement.Center
     ) {
+      // Nếu có icon thì hiển thị icon trước text
+      if (icon != null) {
+        Icon(
+          imageVector = icon,
+          contentDescription = null,
+          modifier = Modifier
+            .size(40.dp)
+            .padding(end = 8.dp),
+          tint = if (color == Color.White) BluePrimary else Color.White
+        )
+      } else if (iconPainter != null) {
+        Image(
+          painter = iconPainter,
+          contentDescription = null,
+          modifier = Modifier
+            .size(24.dp)
+            .padding(end = 8.dp)
+        )
+      }
+
       Text(
         text = text,
-        color = if (color == Color.White) Color.Black else Color.White
+        color = if (color == Color.Transparent) BluePrimary else Color.White
       )
     }
   }

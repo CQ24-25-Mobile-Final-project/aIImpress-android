@@ -136,8 +136,8 @@ fun AuthenticationScreen(navController: NavHostController) {
                 repeat(4) { index ->
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
-                            .background(Color.White),
+                            .size(40.dp),
+
                         contentAlignment = Alignment.Center
                     ) {
                         Text(

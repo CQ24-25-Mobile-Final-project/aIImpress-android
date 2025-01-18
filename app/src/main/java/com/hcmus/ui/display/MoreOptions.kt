@@ -17,7 +17,7 @@ import com.hcmus.ui.display.setAsWallpaper
 
 @Composable
 fun showMoreOptions(navController: NavController, photoUri: String, context: Context) {
-    val options = listOf("Add to Favorites", "Set as Wallpaper", "Details")
+    val options = listOf("Set as Wallpaper", "Details")
 
     val showDialog = remember { mutableStateOf(true) }
     val showDetailsDialog = remember { mutableStateOf(false) }

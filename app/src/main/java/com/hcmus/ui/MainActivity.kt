@@ -30,9 +30,8 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.context.GlobalContext.startKoin
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
-  // ViewModel được khởi tạo bởi Koin
   val viewModel: AiGenerateImageViewModel by viewModel()
 
   @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")

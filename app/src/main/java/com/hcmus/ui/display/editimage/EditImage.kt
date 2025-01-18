@@ -17,6 +17,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -36,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.graphics.drawable.toBitmap
@@ -47,6 +49,7 @@ import androidx.navigation.NavController
 import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
 import com.canhub.cropper.CropImageOptions
+import com.hcmus.R
 import ja.burhanrashid52.photoeditor.OnSaveBitmap
 
 import ja.burhanrashid52.photoeditor.PhotoEditor
@@ -88,7 +91,11 @@ fun EditImageScreen(
             if (result.isSuccessful) {
                 result.uriContent?.let { uri ->
                     Log.d("CropImage", "Crop successful, new URI: $uri")
-                    editedBitmap.value = loadBitmapFromUri(context, uri)
+
+                    // Cập nhật editedBitmap và hiển thị lên PhotoEditorView
+                    val croppedBitmap = loadBitmapFromUri(context, uri)
+                    editedBitmap.value = croppedBitmap
+                    photoEditorView.value?.source?.setImageBitmap(croppedBitmap)
                 }
             } else {
                 Log.e("CropImage", "Crop failed: ${result.error}")
@@ -101,211 +108,265 @@ fun EditImageScreen(
         originalBitmap.value = loadBitmapFromUri(context, uri)
         editedBitmap.value = originalBitmap.value
     }
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .padding(0.dp)
+                .fillMaxWidth()
+        ) {
+            AndroidView(
+                factory = { ctx ->
+                    val editorView = PhotoEditorView(ctx).apply {
+                        layoutParams = ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                    }
+                    photoEditorView.value = editorView
+                    editorView
+                },
+                modifier = Modifier.fillMaxSize()
+            ) { editorView ->
+                if (photoEditor.value == null) {
+                    photoEditor.value = PhotoEditor.Builder(context, editorView)
+                        .setPinchTextScalable(true)
+                        .build()
 
-    // Create the PhotoEditorView and initialize the PhotoEditor
-    AndroidView(
-        factory = { ctx ->
-            val editorView = PhotoEditorView(ctx).apply {
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
+                    bitmap = editedBitmap.value
+                    bitmap?.let { editorView.source.setImageBitmap(it) }
+                }
+            }
+        }
+
+        // Main UI
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp)
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+
+
+            // Undo and Redo Buttons
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 2.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+
+                ) {
+                Button(
+                    onClick = { photoEditor.value?.undo() },
+                    modifier = Modifier.background(Color.Transparent, shape = CircleShape),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+                ) {
+                    Icon(Icons.Filled.Undo, contentDescription = "Undo", tint = Color.Blue)
+                }
+                Button(
+                    onClick = { photoEditor.value?.redo() },
+                    modifier = Modifier.background(Color.Transparent, shape = CircleShape),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+                ) {
+                    Icon(Icons.Filled.Redo, contentDescription = "Redo", tint = Color.Blue)
+                }
+            }
+
+            // Brush Settings
+            if (isBrushActive) {
+                BrushSettings(
+                    photoEditor = photoEditor.value,
+                    onBrushSizeChange = { size -> brushSize = size },
+                    brushOpacity = brushOpacity,
+                    onBrushOpacityChange = { opacity ->
+                        brushOpacity = opacity
+                        photoEditor.value?.setOpacity(opacity)
+                    },
+                    selectedBrushColor = selectedBrushColor,
+                    onBrushColorChange = { color ->
+                        selectedBrushColor = color
+                        photoEditor.value?.brushColor = color.toArgb()
+                    }
                 )
             }
-            photoEditorView.value = editorView
-            editorView
-        },
-        modifier = Modifier.fillMaxSize()
-    ) { editorView ->
-        if (photoEditor.value == null) {
-            photoEditor.value = PhotoEditor.Builder(context, editorView)
-                .setPinchTextScalable(true)
-                .build()
 
-            bitmap = editedBitmap.value
-            bitmap?.let { editorView.source.setImageBitmap(it) }
-        }
-    }
-
-    // Main UI
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
-    ) {
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Undo and Redo Buttons
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Button(
-                onClick = { photoEditor.value?.undo() },
-                modifier = Modifier.background(Color.Transparent, shape = CircleShape),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
-            ) {
-                Icon(Icons.Filled.Undo, contentDescription = "Undo", tint = Color.Blue)
+            // Filter Menu
+            if (isFilterMenuVisible) {
+                FilterMenu(
+                    photoEditor = photoEditor.value,
+                    onClose = { isFilterMenuVisible = false }
+                )
             }
-            Button(
-                onClick = { photoEditor.value?.redo() },
-                modifier = Modifier.background(Color.Transparent, shape = CircleShape),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
-            ) {
-                Icon(Icons.Filled.Redo, contentDescription = "Redo", tint = Color.Blue)
-            }
-        }
+            Spacer(modifier = Modifier.height(2.dp))
 
-        // Brush Settings
-        if (isBrushActive) {
-            BrushSettings(
-                photoEditor = photoEditor.value,
-                onBrushSizeChange = { size -> brushSize = size },
-                brushOpacity = brushOpacity,
-                onBrushOpacityChange = { opacity ->
-                    brushOpacity = opacity
-                    photoEditor.value?.setOpacity(opacity)
-                },
-                selectedBrushColor = selectedBrushColor,
-                onBrushColorChange = { color ->
-                    selectedBrushColor = color
-                    photoEditor.value?.brushColor = color.toArgb()
+            // Button Bar for Brush, Text, Eraser, Filter, and Crop
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(2.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(
+                    listOf(
+                        "Brush",
+                        "Text",
+                        "Eraser",
+                        "Filter",
+                        "Crop",
+                    )
+                ) { action ->
+                    Button(
+                        onClick = {
+                            when (action) {
+                                "Brush" -> {
+                                    isBrushActive = true
+                                    photoEditor.value?.setBrushDrawingMode(true)
+                                }
+
+                                "Text" -> {
+                                    isBrushActive = false
+                                    isTextInputVisible = true
+                                }
+
+                                "Eraser" -> {
+                                    isBrushActive = false
+                                    photoEditor.value?.brushEraser()
+                                }
+
+                                "Filter" -> {
+                                    isBrushActive = false
+                                    isFilterMenuVisible = !isFilterMenuVisible
+                                }
+
+                                "Crop" -> {
+                                    val uri = saveBitmapToTempFile(context, editedBitmap.value!!)
+                                    val cropOptions = CropImageContractOptions(uri, CropImageOptions())
+                                    cropImageLauncher.launch(cropOptions)
+                                }
+
+                            }
+                        },
+                        modifier = Modifier
+                            .background(Color.Transparent, shape = CircleShape)
+                            .padding(5.dp)
+                    ) {
+                        when (action) {
+                            "Brush" -> Icon(
+                                painter = painterResource(id = R.drawable.brush_icon),
+                                contentDescription = "Brush",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+
+                            )
+
+                            "Text" -> Icon(
+                                painter = painterResource(id = R.drawable.text_icon),
+                                contentDescription = "Text",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+
+                            "Eraser" -> Icon(
+                                painter = painterResource(id = R.drawable.eraser_icon),
+                                contentDescription = "Eraser",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+
+                            "Filter" -> Icon(
+                                painter = painterResource(id = R.drawable.filter_icon),
+                                contentDescription = "Filter",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+
+                            "Crop" -> Icon(
+                                painter = painterResource(id = R.drawable.crop_icon),
+                                contentDescription = "Crop",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+
+
+                        }
+                    }
                 }
-            )
-        }
+            }
 
-        // Filter Menu
-        if (isFilterMenuVisible) {
-            FilterMenu(
-                photoEditor = photoEditor.value,
-                onClose = { isFilterMenuVisible = false }
-            )
-        }
-
-        // Button Bar for Brush, Text, Eraser, Filter, and Crop
-        LazyRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(listOf("Brush", "Text", "Eraser", "Filter", "Crop", "Remove Background")) { action ->
+            // Bottom Button Bar for Save and Cancel
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(2.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Button(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier.width(100.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Blue,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("Cancel", color = Color.White)
+                }
                 Button(
                     onClick = {
-                        when (action) {
-                            "Brush" -> {
-                                isBrushActive = true
-                                photoEditor.value?.setBrushDrawingMode(true)
-                            }
-                            "Text" -> {
-                                isBrushActive = false
-                                isTextInputVisible = true
-                            }
-                            "Eraser" -> {
-                                isBrushActive = false
-                                photoEditor.value?.brushEraser()
-                            }
-                            "Filter" -> {
-                                isBrushActive = false
-                                isFilterMenuVisible = !isFilterMenuVisible
-                            }
-                            "Crop" -> {
-                                val uri = saveBitmapToTempFile(context, editedBitmap.value!!)
-                                val cropOptions = CropImageContractOptions(uri, CropImageOptions())
-                                cropImageLauncher.launch(cropOptions)
-                            }
-                            "Remove Background" -> {
-                                navController.navigate("remove_background_screen")
+                        lifecycleOwner.lifecycleScope.launch {
+                            saveImageAsBitmap(context, photoEditor.value) {
+                                navController.popBackStack() // Successfully saved, go back
                             }
                         }
                     },
-                    modifier = Modifier
-                        .background(Color.Transparent, shape = CircleShape)
-                        .padding(8.dp)
+                    modifier = Modifier.width(100.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Blue,
+                        contentColor = Color.White
+                    )
                 ) {
-                    when (action) {
-                        "Brush" -> Icon(Icons.Filled.Brush, contentDescription = "Brush", tint = Color.White)
-                        "Text" -> Icon(Icons.Filled.TextFields, contentDescription = "Text", tint = Color.White)
-                        "Eraser" -> Icon(Icons.Filled.Delete, contentDescription = "Eraser", tint = Color.White)
-                        "Filter" -> Icon(Icons.Filled.Filter, contentDescription = "Filter", tint = Color.White)
-                        "Crop" -> Icon(Icons.Filled.Crop, contentDescription = "Crop", tint = Color.White)
-                        "Remove Background" -> Icon(Icons.Filled.Delete, contentDescription = "Remove Background", tint = Color.White)
-                    }
+                    Text("Save", color = Color.White)
                 }
             }
-        }
 
-        // Bottom Button Bar for Save and Cancel
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Button(
-                onClick = { navController.popBackStack() },
-                modifier = Modifier.width(100.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Blue,
-                    contentColor = Color.White
-                )
-            ) {
-                Text("Cancel", color = Color.White)
-            }
-            Button(
-                onClick = {
-                    lifecycleOwner.lifecycleScope.launch {
-                        saveImageAsBitmap(context, photoEditor.value) {
-                            navController.popBackStack() // Successfully saved, go back
+
+            // Text Input Dialog
+            if (isTextInputVisible) {
+                AlertDialog(
+                    onDismissRequest = { isTextInputVisible = false },
+                    title = { Text("Add Text") },
+                    text = {
+                        Column {
+                            TextField(
+                                value = textInput,
+                                onValueChange = { textInput = it },
+                                label = { Text("Enter Text") }
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            ColorPickerRow(
+                                colors = listOf(Color.Red, Color.Blue, Color.Yellow),
+                                selectedColor = selectedTextColor,
+                                onColorSelected = { color -> selectedTextColor = color }
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                photoEditor.value?.addText(textInput, selectedTextColor.toArgb())
+                                isTextInputVisible = false
+                            }
+                        ) {
+                            Text("Add")
                         }
                     }
-                },
-                modifier = Modifier.width(100.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Blue,
-                    contentColor = Color.White
                 )
-            ) {
-                Text("Save", color = Color.White)
             }
-        }
-
-        // Text Input Dialog
-        if (isTextInputVisible) {
-            AlertDialog(
-                onDismissRequest = { isTextInputVisible = false },
-                title = { Text("Add Text") },
-                text = {
-                    Column {
-                        TextField(
-                            value = textInput,
-                            onValueChange = { textInput = it },
-                            label = { Text("Enter Text") }
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        ColorPickerRow(
-                            colors = listOf(Color.Red, Color.Blue, Color.Yellow),
-                            selectedColor = selectedTextColor,
-                            onColorSelected = { color -> selectedTextColor = color }
-                        )
-                    }
-                },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            photoEditor.value?.addText(textInput, selectedTextColor.toArgb())
-                            isTextInputVisible = false
-                        }
-                    ) {
-                        Text("Add")
-                    }
-                }
-            )
         }
     }
 }
@@ -353,7 +414,7 @@ private fun saveImageAsBitmap(context: Context, photoEditor: PhotoEditor?, onSav
 
 private fun saveBitmapToTempFile(context: Context, bitmap: Bitmap): Uri {
     val tempFile = File.createTempFile("temp_image", ".png", context.cacheDir).apply {
-        deleteOnExit() // Delete when app closes
+        deleteOnExit()
     }
 
     FileOutputStream(tempFile).use { out ->

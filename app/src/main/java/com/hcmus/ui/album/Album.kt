@@ -96,23 +96,16 @@ fun MyAlbumScreen(navController: NavController) {
     }
 
     Scaffold(
-        topBar = {
-            GalleryTopBar(
-                navController,
-                onActionClick = {
-                    showPopupAddNewAlbum =true
-                },
 
-            )
-        },
         bottomBar = {
             var selectedIndex = 1
             CustomBottomBar(
                 selectedIndex = selectedIndex,
                 onTabSelected = { index ->
                     selectedIndex = index
-                    if (index == 3) navController.navigate("shareScreen")
+                    if (index == 3) navController.navigate("photo_map")
                     if (index == 0) navController.navigate("gallery")
+
                 },
                 onAddClick = {
                     navController.navigate("appContent")

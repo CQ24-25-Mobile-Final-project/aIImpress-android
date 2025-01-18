@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.items
@@ -49,14 +50,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.hcmus.R
 import com.hcmus.data.ContextStore
 import com.hcmus.ui.album.ImagePickerScreen
-
+import com.hcmus.ui.theme.BluePrimary
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -90,22 +93,31 @@ fun SelectPhotoForAlbum(navController: NavController,context: Context,albumModel
         topBar = {
             TopAppBar(
                 title = {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = "All Items")
-                        Text(
-                            text = "add ${selectedPhotos.value.size} items to Secret",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(text = "All Items")
+                            Text(
+                                text = "add ${selectedPhotos.value.size} items to Secret",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+                        }
                     }
                 },
 
                 navigationIcon = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.Black)
+                            Icon(
+                                painter = painterResource(id = R.drawable.back_icon),
+                                contentDescription = "Back",
+                                tint = BluePrimary,
+                                modifier = Modifier.size(24.dp)
+                            )
                         }
-                        Text(text = "Back", style = MaterialTheme.typography.bodyLarge)
                         Spacer(modifier = Modifier.width(8.dp))
                     }
                 },

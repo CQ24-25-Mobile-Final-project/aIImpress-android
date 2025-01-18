@@ -239,7 +239,7 @@ fun Navigation(viewModel: AiGenerateImageViewModel, navController: NavHostContro
         composable("photo_map") {
             val context = LocalContext.current
             val photoUris = getAllPhotoPaths(context)
-            MapPhotoView(photos = photoUris) // Assuming URIs are passed as photo data
+            MapPhotoView(photos = photoUris, navController) // Assuming URIs are passed as photo data
         }
         composable("imageDescription/{photoUri}") { backStackEntry ->
             val photoUri = backStackEntry.arguments?.getString("photoUri") ?: ""
@@ -303,7 +303,6 @@ fun Navigation(viewModel: AiGenerateImageViewModel, navController: NavHostContro
             )
         }
 
-        composable("shareScreen") { SharedGalleryScreen(navController = navController) }
 
         composable("galleryScreen") { PhotoGalleryScreen(navController = navController) }
 
@@ -366,7 +365,6 @@ fun Navigation(viewModel: AiGenerateImageViewModel, navController: NavHostContro
             ImagePickerScreen(context = LocalContext.current)
         }
 
-        composable("shareScreen") { SharedGalleryScreen(navController = navController) }
 
         composable("galleryScreen") { PhotoGalleryScreen(navController = navController) }
 
