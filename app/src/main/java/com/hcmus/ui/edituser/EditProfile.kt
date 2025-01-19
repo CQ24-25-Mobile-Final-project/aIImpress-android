@@ -92,7 +92,7 @@ fun EditProfileScreen(navController: NavController, profileViewModel: ProfileVie
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp)
+                .padding(4.dp)
                 .background(Color(0xFFF8F8F8)),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
