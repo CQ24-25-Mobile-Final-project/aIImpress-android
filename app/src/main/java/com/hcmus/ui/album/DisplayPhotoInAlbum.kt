@@ -94,7 +94,6 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                 actionIcon = Icons.Default.MoreVert,
                 menuItems = listOf(
                     "Select" to {isSelectedDropdownOption.value = true},
-                    "Rename" to {isRenameAlbumDropdownOption.value = true},
                     "Delete Album" to {isDeleteAlbumDropdownOption.value = true}
                 )
             )
