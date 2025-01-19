@@ -414,7 +414,33 @@ fun DetailBottomBar(navController: NavController, photoUri: String) {
         )
     }
 }
+@Composable
+fun DeleteConfirmationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = "Delete Photo")
+        },
+        text = {
+            Text("Are you sure you want to delete this photo?")
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Delete")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
 
+fun deletePhoto(context: Context, photoUri: String) {
+    val uri = Uri.parse(photoUri)
+    context.contentResolver.delete(uri, null, null)
+}
 
 // Bottom Bar Item
 @Composable
