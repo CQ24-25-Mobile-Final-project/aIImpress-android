@@ -282,7 +282,7 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                 ) {
                     Box(
                         modifier = Modifier
-                            .width(250.dp)
+                            .width(300.dp)
                             .height(180.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(MaterialTheme.colorScheme.secondary)
