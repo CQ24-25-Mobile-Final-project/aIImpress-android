@@ -68,6 +68,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.hcmus.ui.components.GalleryTopBar
 import com.hcmus.ui.components.MyTopAppBar
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.text.style.TextAlign
 
 @Composable
 fun DisplayPhotoInAlbum(navController: NavController) {
@@ -94,7 +95,6 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                 actionIcon = Icons.Default.MoreVert,
                 menuItems = listOf(
                     "Select" to {isSelectedDropdownOption.value = true},
-                    "Rename" to {isRenameAlbumDropdownOption.value = true},
                     "Delete Album" to {isDeleteAlbumDropdownOption.value = true}
                 )
             )
@@ -280,54 +280,66 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                     alignment = Alignment.Center,
                     onDismissRequest = { showDeletePopup.value = false }
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .width(250.dp)
-                            .height(180.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(MaterialTheme.colorScheme.secondary)
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "Are you sure to delete this album?",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "This album will be removed and you cannot reserve it in the future",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Row {
-                                Button(
-                                    onClick = {
+                    BoxWithConstraints {
+                        val popupWidth = maxWidth * 0.8f  // Chiều rộng chiếm 80% màn hình
+                        val popupHeight = maxHeight * 0.2f // Chiều cao chiếm 30% màn hình
+
+                        Box(
+                            modifier = Modifier
+                                .width(popupWidth)
+                                .height(popupHeight)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(MaterialTheme.colorScheme.secondary)
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "Are you sure to delete this album?",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center // Canh giữa text
+                                )
+                                Text(
+                                    text = "This album will be removed and you cannot reserve it in the future",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    textAlign = TextAlign.Center // Canh giữa text
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceEvenly,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Button(
+                                        onClick = {
+                                            isDeleteAlbumDropdownOption.value = false
+                                            showDeletePopup.value = false
+                                        }
+                                    ) {
+                                        Text(
+                                            text = "Cancel",
+                                            color = Color.White
+                                        )
+                                    }
+                                    Button(onClick = {
+                                        AlbumRepository.deleteAlbum(albumName)
                                         isDeleteAlbumDropdownOption.value = false
                                         showDeletePopup.value = false
+                                        navController.navigate("MyAlbumScreen")
+                                    }) {
+                                        Text(
+                                            text = "Delete",
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
+                                        )
                                     }
-                                ) {
-                                    Text(text = "Cancel",
-                                        color = Color.White)
-                                }
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Button(onClick = {
-                                    AlbumRepository.deleteAlbum(albumName)
-                                    isDeleteAlbumDropdownOption.value = false
-                                    showDeletePopup.value = false
-                                    navController.navigate("MyAlbumScreen")
-                                }) {
-                                    Text(
-                                        text = "Delete",
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
-                                    )
                                 }
                             }
                         }
                     }
                 }
+
             }
         }
     }
@@ -368,49 +380,58 @@ fun FloatingButtonExample(icon: ImageVector,
                 alignment = Alignment.Center,
                 onDismissRequest = { showDeletePopup.value = false }
             ) {
-                Box(
-                    modifier = Modifier
-                        .width(250.dp)
-                        .height(150.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.secondary)
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "Delete 4 items?",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "These photos will be removed from the album",
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Row {
-                            Button(onClick = { showDeletePopup.value = false }) {
-                                Text(text = "Cancel",
-                                    color = Color.White
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(onClick = { selectedPhotos.forEach { photoUri ->
-                                albumViewModel.deletePhotoInAlbum(albumName, photoUri)
-                            }
-                                showDeletePopup.value = false
-                            }) {
-                                Text(
-                                    text = "Delete",
-                                    fontWeight = FontWeight.Bold,
-                                    color =Color.White
-                                )
+                BoxWithConstraints {
+                    // Chiều rộng chiếm 80% màn hình, chiều cao chiếm 30% màn hình
+                    val popupWidth = maxWidth * 0.8f
+                    val popupHeight = maxHeight * 0.2f
+
+                    Box(
+                        modifier = Modifier
+                            .width(popupWidth)
+                            .height(popupHeight)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.secondary)
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "Delete ${selectedPhotos.size} items?",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "These photos will be removed from the album",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceEvenly,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Button(onClick = { showDeletePopup.value = false }) {
+                                    Text(text = "Cancel", color = Color.White)
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Button(onClick = {
+                                    selectedPhotos.forEach { photoUri ->
+                                        albumViewModel.deletePhotoInAlbum(albumName, photoUri)
+                                    }
+                                    showDeletePopup.value = false
+                                }) {
+                                    Text(
+                                        text = "Delete",
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
+
         }
     }
 }
