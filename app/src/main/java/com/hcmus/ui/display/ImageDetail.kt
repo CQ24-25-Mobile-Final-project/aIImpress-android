@@ -319,12 +319,13 @@ fun DetailTopBar(
     }
 }
 
-// BottomBar with Navigation
 @Composable
 fun DetailBottomBar(navController: NavController, photoUri: String) {
     val selectedItem = remember { mutableStateOf(0) }
     val showDialog = remember { mutableStateOf(false) }
+    val showDeleteConfirmation = remember { mutableStateOf(false) } // State for delete confirmation dialog
     val context = LocalContext.current
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -346,8 +347,7 @@ fun DetailBottomBar(navController: NavController, photoUri: String) {
             contentDescription = "Delete",
             onClick = {
                 selectedItem.value = 1
-                deleteFileByUri(context.contentResolver, Uri.parse(photoUri))
-                navController.navigate("gallery")
+                showDeleteConfirmation.value = true // Show delete confirmation dialog
             }
         )
 
@@ -359,7 +359,6 @@ fun DetailBottomBar(navController: NavController, photoUri: String) {
                 selectedItem.value = 2
                 navController.navigate("editImage/${Uri.encode(photoUri)}")
             }
-
         )
 
         BottomBarItem(
@@ -385,8 +384,7 @@ fun DetailBottomBar(navController: NavController, photoUri: String) {
                 selectedItem.value = 4
                 navController.navigate("imageDescription/${Uri.encode(photoUri)}")
             },
-
-            )
+        )
 
         BottomBarItem(
             isSelected = selectedItem.value == 5,
@@ -396,14 +394,27 @@ fun DetailBottomBar(navController: NavController, photoUri: String) {
                 selectedItem.value = 5
                 showDialog.value = true
             },
-
-            )
-
+        )
     }
+
     if (showDialog.value) {
         showMoreOptions(navController, photoUri, context = LocalContext.current)
     }
+    if (showDeleteConfirmation.value) {
+        DeleteConfirmationDialog(
+            onConfirm = {
+     
+                deletePhoto(context, photoUri)
+                showDeleteConfirmation.value = false
+                navController.popBackStack() 
+            },
+            onDismiss = {
+                showDeleteConfirmation.value = false
+            }
+        )
+    }
 }
+
 
 // Bottom Bar Item
 @Composable
