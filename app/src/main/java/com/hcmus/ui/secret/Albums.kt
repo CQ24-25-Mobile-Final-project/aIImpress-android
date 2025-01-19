@@ -1,17 +1,16 @@
 package com.hcmus.ui.secret
 
+
+
 import android.net.Uri
-import android.util.Log
 
 object Albums {
-    private val _albums = mutableListOf<Pair<String, List<Uri>>>( // Danh sách album
-        "DefaultVault" to emptyList() // Album mặc định
-    )
+    private val _albums = mutableListOf<Pair<String, List<Uri>>>()
     val albums: List<Pair<String, List<Uri>>> get() = _albums
 
-    private var _albumName: String? = null // Lưu tên album
+    private var _albumName: String? = null
     val albumName: String
-        get() = _albumName ?: "DefaultVault" // Trả về tên mặc định nếu chưa được gán
+        get() = _albumName ?: throw IllegalStateException("Album name has not been initialized")
 
     fun addAlbum(name: String, photos: List<Uri>) {
         _albums.add(name to photos)
@@ -27,7 +26,6 @@ object Albums {
         if (existingAlbumIndex != -1) {
             val updatedPhotos = _albums[existingAlbumIndex].second + photos
             _albums[existingAlbumIndex] = name to updatedPhotos
-            Log.d("Albums", "Updated album: ${_albums[existingAlbumIndex]}") // In album đã được cập nhật
         }
     }
 
@@ -44,16 +42,6 @@ object Albums {
             _albums[albumIndex] = albumName to updatedPhotos
         } else {
             throw IllegalArgumentException("Album not found: $albumName")
-        }
-    }
-
-    fun renameAlbum(oldName: String, newName: String) {
-        val albumIndex = _albums.indexOfFirst { it.first == oldName }
-        if (albumIndex != -1) {
-            val photos = _albums[albumIndex].second
-            _albums[albumIndex] = newName to photos // Cập nhật tên album
-        } else {
-            throw IllegalArgumentException("Album not found: $oldName")
         }
     }
 

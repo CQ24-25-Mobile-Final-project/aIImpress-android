@@ -8,6 +8,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import com.hcmus.ui.secret.ImageGrid
+import com.hcmus.ui.secret.RequestMediaPermissions
+import com.hcmus.ui.secret.fetchImages
 
 @Composable
 fun ImagePickerScreen(context: Context) {
@@ -15,10 +18,6 @@ fun ImagePickerScreen(context: Context) {
 
     RequestMediaPermissions {
         images.value = fetchImages(context)
-    }
-    // Log the number of images loaded
-    LaunchedEffect(images.value) {
-        Log.d("ImagePickerScreen", "Images loaded: ${images.value.size}")
     }
 
     if (images.value.isNotEmpty()) {

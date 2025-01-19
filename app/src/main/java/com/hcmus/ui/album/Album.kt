@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
@@ -72,10 +73,6 @@ fun MyAlbumScreen(navController: NavController) {
     var showPopupAddNewAlbum by remember { mutableStateOf(false) }
     var NewAlbumName by remember { mutableStateOf("") }
 
-    LaunchedEffect(albums) {
-        Log.d("AlbumsLog", "Albums content: $albums")
-    }
-
     val context = LocalContext.current
     val photos = remember { mutableStateOf<List<Uri>>(emptyList()) }
     photos.value = fetchImages(context)
@@ -96,22 +93,13 @@ fun MyAlbumScreen(navController: NavController) {
     }
 
     Scaffold(
-        topBar = {
-            GalleryTopBar(
-                navController,
-                onActionClick = {
-                    showPopupAddNewAlbum =true
-                },
-
-            )
-        },
         bottomBar = {
             var selectedIndex = 1
             CustomBottomBar(
                 selectedIndex = selectedIndex,
                 onTabSelected = { index ->
                     selectedIndex = index
-                    if (index == 3) navController.navigate("shareScreen")
+                    if (index == 3) navController.navigate("photo_map")
                     if (index == 0) navController.navigate("gallery")
                 },
                 onAddClick = {
@@ -139,6 +127,12 @@ fun MyAlbumScreen(navController: NavController) {
                         contentDescription = if (isGridView) "Switch to grid view" else "Switch to list view"
                     )
                 }
+                IconButton(onClick = { showPopupAddNewAlbum = !showPopupAddNewAlbum }) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = if (isGridView) "Switch to grid view" else "Switch to list view"
+                    )
+                }
             }
 
             if (isGridView) {
@@ -154,8 +148,6 @@ fun MyAlbumScreen(navController: NavController) {
                                 .clickable(
                                     onClick = {
                                         try {
-                                            Log.d("test", "Albums content: $name")
-
                                             albumViewModel.selectAlbum(name)
                                             navController.navigate("DisplayPhotoInAlbum")
                                         } catch (e: Exception) {

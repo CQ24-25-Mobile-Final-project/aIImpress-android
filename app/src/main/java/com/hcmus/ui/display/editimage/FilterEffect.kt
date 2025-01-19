@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import ja.burhanrashid52.photoeditor.PhotoEditor
 import androidx.compose.ui.graphics.toArgb
+import com.hcmus.ui.theme.BluePrimary
 import ja.burhanrashid52.photoeditor.CustomEffect
 import ja.burhanrashid52.photoeditor.PhotoFilter
 
@@ -89,7 +90,7 @@ fun FilterMenu(
                 modifier = Modifier
                     .padding(4.dp),
                 colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Gray, // Background color of the button
+                        containerColor = BluePrimary, // Background color of the button
                         contentColor = Color.White  // Text color
                 )
             ) {

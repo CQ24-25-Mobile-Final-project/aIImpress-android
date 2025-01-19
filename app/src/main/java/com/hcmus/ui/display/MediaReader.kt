@@ -21,7 +21,13 @@ class MediaReader(
   private val cloudFirestoreService: CloudFirestoreService = CloudFirestoreService()
 
   fun getAllMediaFiles(): Map<String, List<MediaFile>> {
-    val email = ContextStore.get(context, "email") ?: throw Exception("Email not found")
+    val email = ContextStore.get(context, "email")
+    if (email.isNullOrEmpty()) {
+      Log.e("MediaReader", "Email not found in ContextStore")
+      return emptyMap()
+    }
+
+    Log.d("MediaReader", "Fetching media files for email: $email")
     val mediaFiles = mutableListOf<MediaFile>()
     val serverFiles = loadMediaFilesFromStorage()
     val localFiles = loadMediaFilesFromDevice()
@@ -40,6 +46,15 @@ class MediaReader(
     }
     if (fileNotInDevice.isNotEmpty()) {
       storageService.bulkDownload(fileNotInDevice)
+    }
+
+    mediaFiles.map { localFile ->
+      val serverFile = serverFiles.find { it.uri == localFile.uri }
+      if (serverFile != null) {
+        localFile.copy(tag = serverFile.tag)
+      } else {
+        localFile
+      }
     }
 
     mediaFiles.addAll(localFiles + serverFiles)
@@ -80,17 +95,18 @@ class MediaReader(
         val name = cursor.getString(nameColumn)
         val dateAdded = cursor.getLong(dateColumn)
         val uri = ContentUris.withAppendedId(queryUri, id)
+        val tag = ""
 
         mediaFiles.add(
           MediaFile(
             uri = uri,
             name = name,
             dateAdded = dateAdded,
+            tag = tag,
           )
         )
       }
     }
-
     return mediaFiles.toList()
   }
 
@@ -112,7 +128,8 @@ class MediaReader(
           uri = Uri.parse(it["uri"] as String),
           url = Uri.parse(it["url"] as String),
           name = it["name"] as String,
-          dateAdded = it["dateAdded"] as Long
+          dateAdded = it["dateAdded"] as Long,
+          tag = it["tag"] as String
         )
       })
     }

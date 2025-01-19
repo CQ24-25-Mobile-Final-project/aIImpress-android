@@ -52,7 +52,6 @@ class AlbumViewModel : ViewModel() {
     }
 
     fun addAlbumName(name: String) {
-        Log.d("AlbumViewModel", "Setting album name: $name")
         albumRepository.addAlbumName(name)
         _albums.value = albumRepository.albums
     }

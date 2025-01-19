@@ -43,7 +43,6 @@ fun getPhotoDetails(context: Context, photoUri: String): PhotoDetails? {
                 if (filePathIndex >= 0 && fileSizeIndex >= 0) {
                     val filePath = it.getString(filePathIndex)
                     val fileSize = it.getLong(fileSizeIndex)
-                    Log.d("SmartAlbumOrganizer", "File Path: $filePath")
 
                     // Check if the file is a screenshot or from specific media
                     var media: String? = null
@@ -115,7 +114,6 @@ fun getPhotoDetails2(context: Context, photoUri: String): PhotoDetails? {
             val fileSize = inputStream.available().toString() + " bytes"
 
             val filePath = Uri.parse(photoUri).path ?: "Unknown path"
-            Log.d("SmartAlbumOrganizer", "File Path: $filePath")
 
             var media: String? = null
             var screenShot = false

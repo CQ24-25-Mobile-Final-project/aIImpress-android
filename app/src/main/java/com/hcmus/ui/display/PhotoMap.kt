@@ -17,6 +17,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -27,6 +28,7 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.hcmus.ui.components.CustomBottomBar
 
 import java.io.IOException
 
@@ -86,7 +88,7 @@ fun RequestLocationPermission() {
 
 
 @Composable
-fun MapPhotoView(photos: List<Uri>) {
+fun MapPhotoView(photos: List<Uri>, navController: NavController) {
     val context = LocalContext.current
 
     // Convert URIs to PhotoData with GPS coordinates
@@ -160,6 +162,13 @@ fun MapPhotoView(photos: List<Uri>) {
                 )
             }
         }
+        CustomBottomBar(
+            selectedIndex = 3,
+            onTabSelected = { index -> },
+            onAddClick = { navController.navigate("appContent") },
+            navController = navController
+        )
+
     }
 }
 

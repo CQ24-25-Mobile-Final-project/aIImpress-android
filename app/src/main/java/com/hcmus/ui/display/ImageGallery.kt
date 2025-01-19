@@ -1,6 +1,7 @@
 package com.hcmus.ui.display
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,18 +21,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
-import com.google.accompanist.insets.LocalWindowInsets
 import com.hcmus.R
 import com.hcmus.ui.components.CustomBottomBar
 import com.hcmus.ui.components.GalleryTopBar
+import com.hcmus.ui.viewmodel.MediaFileViewModel
+import kotlinx.coroutines.runBlocking
+import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,20 +44,38 @@ fun PhotoGalleryScreen(navController: NavController) {
     var searchQuery by remember { mutableStateOf("") }
     val context = LocalContext.current
 
+    // Save MediaFile to Room Database
+    val mediaFileViewModel: MediaFileViewModel = viewModel()
+
     // Assuming MediaReader is a custom class for accessing media files
     val mediaReader = remember { MediaReader(context) }
-    val photosByDate = remember { mediaReader.getAllMediaFiles() }
+    val photosByDate = remember { mediaReader.getAllMediaFiles() } // <key-value> ~ <đ-mm-yyyy, mediafile>
+    val photosByTag: List<MediaFile> = runBlocking {
+        mediaFileViewModel.getAllMediaFiles()
+    }
+
     val categorizedPhotos = categorizePhotos(photosByDate)
     val storyItems = getStoryItemsFromPhotos(categorizedPhotos)
+
+    // Insert media files into the database
+    LaunchedEffect(Unit) {
+        try {
+            photosByDate.values.flatten().forEach { mediaFile ->
+                mediaFileViewModel.insert(mediaFile)
+            }
+        } catch (e: Exception) {
+            Log.e("PhotoGalleryScreen", "Error inserting media files", e)
+        }
+    }
+
+    val filteredPhotos = filterPhotos(categorizedPhotos, photosByTag, searchQuery, mediaFileViewModel)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-
     ) {
         GalleryTopBar(navController)
-
 
         SearchOrFilterBar(
             isFilterActive = isFilterActive,
@@ -62,10 +83,8 @@ fun PhotoGalleryScreen(navController: NavController) {
             onSearchQueryChange = { searchQuery = it },
             onFilterToggle = { isFilterActive = !isFilterActive }
         )
-        val storyItems = getStoryItemsFromPhotos(categorizedPhotos)
 
         StoryItemView(storyItems, navController)
-
 
         // Displaying the photo gallery
         LazyColumn(
@@ -76,7 +95,8 @@ fun PhotoGalleryScreen(navController: NavController) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            photosByDate.forEach { (date, photos) ->
+            if (searchQuery.isNotEmpty())
+            filteredPhotos.forEach { (date, photos) ->
                 item {
                     Text(
                         text = date,
@@ -101,7 +121,7 @@ fun PhotoGalleryScreen(navController: NavController) {
                                     }
                             ) {
                                 AsyncImage(
-                                    model = photo.uri,
+                                    model = photo.url ?: photo.uri,
                                     modifier = Modifier.fillMaxSize(),
                                     contentDescription = null,
                                     contentScale = ContentScale.Crop
@@ -113,7 +133,46 @@ fun PhotoGalleryScreen(navController: NavController) {
                         }
                     }
                 }
-            }
+            } else
+                photosByDate.forEach { (date, photos) ->
+                    item {
+                        Text(
+                            text = date,
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
+
+                    items(photos.chunked(3)) { rowPhotos ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        ) {
+                            rowPhotos.forEach { photo ->
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .aspectRatio(1f)
+                                        .background(Color.White)
+                                        .clickable {
+                                            navController.navigate("imageDetail/${Uri.encode(photo.uri.toString())}")
+                                        }
+                                ) {
+                                    AsyncImage(
+                                        model = photo.uri,
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            }
+                            repeat(3 - rowPhotos.size) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
+
         }
 
         CustomBottomBar(
@@ -143,7 +202,10 @@ fun SearchOrFilterBar(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                val categories = listOf("Favorites", "Selfies", "Travel", "Family")
+                val categories = listOf(
+                    "Favorite", "Work", "Personal", "Important", "Plant", "To-Do",
+                    "Family", "Friends", "Pet", "Shopping", "Travel", "Sunset"
+                )
                 items(categories) { category ->
                     Text(
                         text = category,
@@ -167,7 +229,7 @@ fun SearchOrFilterBar(
                 },
                 modifier = Modifier
                     .weight(1f)
-                    .height(50.dp)
+                    .height(55.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.secondary),
                 colors = TextFieldDefaults.colors(
@@ -181,24 +243,9 @@ fun SearchOrFilterBar(
         }
 
         Spacer(modifier = Modifier.width(8.dp))
-
-        Box(
-            modifier = Modifier
-                .size(50.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.secondary)
-                .clickable { onFilterToggle() },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.filter_icon),
-                contentDescription = "Filter Icon",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
-            )
-        }
     }
 }
+
 @Composable
 fun StoryItemView(stories: List<StoryItem>, navController: NavController) {
     LazyRow(
@@ -247,14 +294,12 @@ fun StoryItemView(stories: List<StoryItem>, navController: NavController) {
     }
 }
 
-
 data class Photo(
     val uri: Uri,
     val date: Date,
     val label: String,
+    var tag: String,
 )
-
-
 
 data class StoryItem(
     val imageUri: Uri,
@@ -283,10 +328,11 @@ fun categorizePhotos(photos: Map<String, List<MediaFile>>): Map<String, List<Pho
                 diffInDays < 365 -> "Vài tháng trước" // A few months ago
                 else -> "Vài năm trước" // A few years ago
             }
+            val tag = ""
 
             // Add the photo to the categorized list
             categorizedPhotos.computeIfAbsent(category) { mutableListOf() }
-                .add(Photo(uri = mediaFile.url ?: mediaFile.uri, date = photoDate, label =category))
+                .add(Photo(uri = mediaFile.url ?: mediaFile.uri, date = photoDate, label = category, tag = tag))
         }
     }
 
@@ -303,30 +349,129 @@ fun getStoryItemsFromPhotos(categorizedPhotos: Map<String, List<Photo>>): List<S
     }
 }
 
-//
-//@Composable
-//fun PhotoGalleryScreenPreview() {
-//    // Mock NavController for the preview
-//    val mockNavController = NavController(LocalContext.current)
-//
-//    // Mock data for preview
-//    val mockPhotos = mapOf(
-//        "Today" to listOf(
-//            Photo(uri = Uri.parse("file://mock/photo1.jpg"), date = Date(), label = "Today"),
-//            Photo(uri = Uri.parse("file://mock/photo2.jpg"), date = Date(), label = "Today")
-//        ),
-//        "Yesterday" to listOf(
-//            Photo(uri = Uri.parse("file://mock/photo3.jpg"), date = Date(), label = "Yesterday")
-//        )
-//    )
-//
-//    val mockStoryItems = listOf(
-//        StoryItem(imageUri = Uri.parse("file://mock/story1.jpg"), label = "Story 1"),
-//        StoryItem(imageUri = Uri.parse("file://mock/story2.jpg"), label = "Story 2")
-//    )
-//
-//    MaterialTheme {
-//        PhotoGalleryScreen(navController = mockNavController)
-//    }
-//}
+fun filterPhotosByDate(categorizedPhotos: Map<String, List<Photo>>, searchQuery: String): Map<String, List<Photo>> {
+    return categorizedPhotos.mapValues { (date, photos) ->
+        photos.filter { photo ->
+            val queryLower = searchQuery.lowercase()
 
+            // Convert the Date to a string in a specific format for comparison
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val photoDateString = dateFormat.format(photo.date)
+
+            // Extract day, month, and year from photo date
+            val calendar = Calendar.getInstance().apply { time = photo.date }
+            val day = calendar.get(Calendar.DAY_OF_MONTH)
+            val month = calendar.get(Calendar.MONTH) + 1 // Months are 0-based
+            val year = calendar.get(Calendar.YEAR)
+
+            // Pattern matching for day, month, year queries
+            val matchesDay = "ngày $day" in queryLower
+            val matchesMonth = "tháng $month" in queryLower
+            val matchesDayMonth = "ngày $day tháng $month" in queryLower
+            val matchesYear = "năm $year" in queryLower
+
+            // Check if the search query matches the label or the formatted date
+            val matchesLabel = photo.label.lowercase().contains(queryLower)
+            val matchesDate = photoDateString.contains(queryLower)
+
+            // Try to parse the query in multiple date formats
+            val isValidDate = try {
+                val dateFormats = listOf(
+                    SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()),
+                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                )
+
+                // Try parsing with each format
+                dateFormats.any { format ->
+                    val parsedDate = format.parse(searchQuery)
+                    parsedDate != null && photo.date == parsedDate
+                }
+            } catch (e: Exception) {
+                false
+            }
+
+            // Use regex to handle different separators ("/", "-", or spaces) between day, month, and year
+            val regex = "(\\d{1,2})[-/\\s](\\d{1,2})[-/\\s](\\d{4})".toRegex()
+            val regexMatch = regex.matchEntire(searchQuery)
+
+            val isValidDateWithRegex = regexMatch?.groupValues?.let {
+                val searchDay = it[1].toInt()
+                val searchMonth = it[2].toInt()
+                val searchYear = it[3].toInt()
+
+                // Check if parsed date matches the photo's date
+                val isMatchingDate = (searchDay == day && searchMonth == month && searchYear == year)
+                isMatchingDate
+            } ?: false
+
+            // Return true if any condition matches
+            matchesLabel || matchesDate || matchesDay || matchesMonth || matchesDayMonth || matchesYear || isValidDate || isValidDateWithRegex
+        }
+    }.filter { (_, photos) -> photos.isNotEmpty() }
+}
+
+fun filterPhotosByTag(categorizedPhotos: List<MediaFile>, searchQuery: String, mediaFileViewModel: MediaFileViewModel): Map<String, List<Photo>> {
+    return try {
+        // Convert MediaFile to Photo
+        val photos = categorizedPhotos.map { mediaFile ->
+            Photo(
+                uri = mediaFile.uri,
+                date = Date(mediaFile.dateAdded * 1000L),
+                label = mediaFile.name,
+                tag = mediaFile.tag ?: ""
+            )
+        }
+
+        // Retrieve and set the tag for each photo
+        runBlocking {
+            photos.forEach { photo ->
+                val tag = mediaFileViewModel.getTagByUri(photo.uri.toString())
+                photo.tag = tag ?: ""
+            }
+        }
+
+        // Filter photos by tag
+        val queryLower = searchQuery.lowercase()
+        val filteredPhotos = photos.filter { photo ->
+            photo.tag.lowercase().contains(queryLower)
+        }
+
+        // Group filtered photos by date
+        filteredPhotos.groupBy { photo ->
+            SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(photo.date)
+        }
+    } catch (e: Exception) {
+        Log.e("PhotoGallery", "Error: ${e.message}")
+        emptyMap() // Return an empty map if there is an error
+    }
+}
+
+fun filterPhotos(
+    categorizedPhotos: Map<String, List<Photo>>,
+    categorizedPhotosTag: List<MediaFile>,
+    searchQuery: String,
+    mediaFileViewModel: MediaFileViewModel
+): Map<String, List<Photo>> {
+    val filteredByDate = filterPhotosByDate(categorizedPhotos, searchQuery)
+    val filteredByTag = filterPhotosByTag(categorizedPhotosTag, searchQuery, mediaFileViewModel)
+
+    // Combine the results from both filters
+    val combinedResults = mutableMapOf<String, List<Photo>>()
+
+    // Add photos filtered by date
+    filteredByDate.forEach { (date, photos) ->
+        combinedResults[date] = combinedResults.getOrDefault(date, emptyList()) + photos
+    }
+
+    // Add photos filtered by tag
+    filteredByTag.forEach { (date, photos) ->
+        combinedResults[date] = combinedResults.getOrDefault(date, emptyList()) + photos
+    }
+
+    // Remove duplicates
+    combinedResults.forEach { (date, photos) ->
+        combinedResults[date] = photos.distinctBy { it.uri }
+    }
+
+    return combinedResults.filter { (_, photos) -> photos.isNotEmpty() }
+}

@@ -12,7 +12,6 @@ fun setAsWallpaper(context: Context, photoUri: String) {
     try {
         val wallpaperManager = WallpaperManager.getInstance(context)
 
-
         val inputStream = context.contentResolver.openInputStream(Uri.parse(photoUri))
         if (inputStream != null) {
             val bitmap: Bitmap = BitmapFactory.decodeStream(inputStream)

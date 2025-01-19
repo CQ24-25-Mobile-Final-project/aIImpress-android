@@ -122,9 +122,7 @@ fun AddNewAlbum(navController: NavController) {
                         .height(90.dp)
                         .clickable {
                             try {
-                                Log.d("test", "Album Name: $albumName - Đang chuyển sang SelectImageForAlbum")
                                 albumViewModel.addAlbumName(albumName)
-                                Log.d("test", "Chuyển thành công sang SelectImageForAlbum")
                                 navController.navigate("SelectImageForAlbum")
                             } catch (e: Exception) {
                                 Log.e("Navigation Error", e.message.toString())

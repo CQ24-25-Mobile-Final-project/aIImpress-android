@@ -10,13 +10,17 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 
 import androidx.compose.runtime.Composable
@@ -27,7 +31,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -36,6 +42,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.hcmus.ui.theme.BluePrimary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -53,6 +60,7 @@ import java.net.SocketTimeoutException
 @Composable
 fun ImageDescriptionScreen(photoUri: String, viewModel: MainViewModel, navController: NavController) {
     val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
     val description by viewModel.caption.collectAsState()
     val error by viewModel.error.collectAsState()
 
@@ -67,10 +75,11 @@ fun ImageDescriptionScreen(photoUri: String, viewModel: MainViewModel, navContro
         Image(
             painter = rememberAsyncImagePainter(model = Uri.parse(photoUri)),
             contentDescription = "Photo",
+            contentScale = ContentScale.Crop,
             modifier = Modifier
-                .size(200.dp)
-                .clip(CircleShape),
-            contentScale = ContentScale.Crop
+                .fillMaxWidth()
+                .height(300.dp)
+
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -102,9 +111,35 @@ fun ImageDescriptionScreen(photoUri: String, viewModel: MainViewModel, navContro
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = { navController.popBackStack() }) {
-            Text(text = "Back")
+        Row {
+            Button(
+                onClick = { navController.popBackStack() },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = BluePrimary,
+                    contentColor = Color.White
+                ),
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text(text = "Back")
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Button(
+                onClick = {
+                    clipboardManager.setText(AnnotatedString(description))
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = BluePrimary,
+                    contentColor = Color.White
+                ),
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text(text = "Copy Text")
+            }
         }
+
+
     }
 
     // Gửi yêu cầu lấy mô tả ảnh nếu chưa có

@@ -79,19 +79,16 @@ fun DisplayPhotoInAlbum(navController: NavController) {
     val isRenameAlbumDropdownOption = remember { mutableStateOf(false) }
     val albumName = remember { AlbumRepository.albumName }
     val photos by albumViewModel.photos.observeAsState(emptyList())
-    Log.d("test", "Albums content: $albumName")
-    Log.d("test", "Photos: $photos")
 
     LaunchedEffect(albumName) {
-        Log.d("DisplayPhotoInAlbum", "Album name observed: $albumName")
         albumViewModel.selectAlbum(albumName)
     }
     Scaffold (
         topBar = {
             GalleryTopBar(navController)
             MyTopAppBar(
-                title = "",
-                titleLeftButton = "Albums",
+                title = "$albumName",
+                titleLeftButton = "",
                 onNavigationClick = { navController.navigate("MyAlbumScreen") },
                 onActionClick = {},
                 actionIcon = Icons.Default.MoreVert,
@@ -139,14 +136,6 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                             Text(text="Save")
                         }
                     }
-                } else {
-                    Text(
-                        text = albumName,
-                        modifier = Modifier
-                            .padding(16.dp),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.primary
-                    )
                 }
 
                 Row(horizontalArrangement = Arrangement.SpaceBetween,
@@ -171,7 +160,7 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null)
+                                Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = Color.White)
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text ="Select all",
@@ -202,9 +191,9 @@ fun DisplayPhotoInAlbum(navController: NavController) {
                             onClick = { navController.navigate("SelectImageForAlbum") },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = Color.Black
+                                contentColor = Color.White
                             ),
-                            modifier = Modifier.padding(start = 16.dp)
+                            modifier = Modifier.padding(start = 5.dp)
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,

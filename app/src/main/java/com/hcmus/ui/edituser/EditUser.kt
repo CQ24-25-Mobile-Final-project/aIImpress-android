@@ -1,5 +1,10 @@
 package com.hcmus.ui.edituser
 
+import android.net.Uri
+import android.os.Bundle
+import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -9,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -17,13 +23,44 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.Image
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.hcmus.ui.components.CustomBottomBar // Kiểm tra xem nơi khai báo
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import coil.compose.rememberImagePainter
+import com.google.firebase.auth.FirebaseAuth
+import com.hcmus.ui.components.CustomBottomBar
 import com.hcmus.R
+import com.hcmus.data.model.CredentialDatabase
+import com.hcmus.data.model.Gender
+import com.hcmus.data.model.Profile
+import com.hcmus.ui.viewmodel.ProfileViewModel
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(navController: NavController) {
+fun ProfileScreen(navController: NavController,profileViewModel: ProfileViewModel = viewModel()) {
+    val coroutineScope = rememberCoroutineScope()
+    val profileState = remember { mutableStateOf<Profile?>(null) }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Get the current user's email
+    val currentUserEmail = FirebaseAuth.getInstance().currentUser?.email
+
+    // Load profile data when the screen is displayed
+    LaunchedEffect(currentUserEmail) {
+        coroutineScope.launch {
+            currentUserEmail?.let { email ->
+                val profile = profileViewModel.getProfileByEmail(email)
+                profileState.value = profile
+                selectedImageUri = profile?.avatarUrl?.let { Uri.parse(it) }
+            }
+        }
+    }
+
     Scaffold(
         bottomBar = {
             CustomBottomBar(
@@ -40,15 +77,17 @@ fun ProfileScreen(navController: NavController) {
                 .padding(paddingValues)
                 .background(Color(0xFFF8F8F8))
         ) {
-            ProfileHeader()
-            ProfileBody(navController)
+            profileState?.let {
+                ProfileHeader(it.value?.avatarUrl.toString())
+                ProfileBody(navController)
+            }
         }
     }
 }
 
 
 @Composable
-fun ProfileHeader() {
+fun ProfileHeader(selectedImageUri: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -67,13 +106,20 @@ fun ProfileHeader() {
                     .clip(CircleShape)
                     .background(Color.Gray)
             ) {
-                // Profile Picture Placeholder
-                Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_foreground), // Replace with actual image resource
-                    contentDescription = "Profile Image",
-                    modifier = Modifier
-                        .fillMaxSize()
-                )
+                if (selectedImageUri != null && selectedImageUri!!.isNotEmpty()) {
+                    Image(
+                        painter = rememberImagePainter(data = selectedImageUri),
+                        contentDescription = "Profile Image",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                        contentDescription = "Profile Image",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
                 Icon(
                     painter = painterResource(id = R.drawable.edit_icon), // Replace with pencil icon resource
                     contentDescription = "Edit",
@@ -145,6 +191,8 @@ fun ProfileOptionSection(
 }
 @Composable
 fun ProfileBody(navController: NavController) {
+    val credentialRepository = CredentialDatabase.getInstance(LocalContext.current).credentialRepository()
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -172,6 +220,16 @@ fun ProfileBody(navController: NavController) {
         ProfileOptionSection("Help & Support")
         ProfileOptionSection("Contact us")
         ProfileOptionSection("Privacy policy")
+        Spacer(modifier = Modifier.height(8.dp))
+
+        ProfileOptionSection(
+            title = "Logout",
+            onClick = {
+                credentialRepository.delete()
+                navController.navigate("login")
+            }
+        )
+
     }
 }
 

@@ -66,9 +66,6 @@ fun SelectImageForAlbum(navController: NavController) {
     val selectedPhotos = remember { mutableStateListOf<Uri>() }
     val albumName = remember { AlbumRepository.albumName }
 
-    // In log giá trị albumName
-    Log.d("test", "Album Name: $albumName")
-
     RequestMediaPermissions {
         photos.value = fetchImages(context) 
     }
@@ -83,9 +80,7 @@ fun SelectImageForAlbum(navController: NavController) {
                 onActionClick = {
                     if (albumViewModel.albums.value?.find { it.first == albumName } == null) {
                         albumViewModel.addAlbum(albumName, selectedPhotos)
-                        Log.d("test", "Album does not exist. Creating new album.")
                     } else {
-                        Log.d("test", "Album exists. Adding photos to the existing album.")
                         albumViewModel.insertIntoAlbum(albumName, selectedPhotos)
                     }
                     navController.navigate("MyAlbumScreen")
@@ -210,8 +205,6 @@ fun fetchImages(context: Context): List<Uri> {
             images.add(uri)
         }
     }
-    // Log the number of images and some URIs for debugging
-    Log.d("fetchImages", "Fetched ${images.size} images.")
     images.take(5).forEach { Log.d("fetchImages", "Image URI: $it") }
     return images
 }
