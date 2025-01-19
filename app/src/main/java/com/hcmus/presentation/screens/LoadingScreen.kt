@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.navOptions
 import com.hcmus.domain.Constants
 import com.hcmus.domain.Screen
 import com.hcmus.presentation.AiGenerateImageViewModel
@@ -18,10 +19,12 @@ import com.hcmus.presentation.AiGenerateImageViewModel
 fun LoadingScreen(viewModel: AiGenerateImageViewModel, navController: NavHostController) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator()
-        val imageString by viewModel.imageBase64.collectAsState()
+        val imageString by viewModel.imageUrl.collectAsState()
         Log.d("GenerateImageScreen", imageString.toString())
         if(imageString != Constants.LOADING){
-            navController.navigate(Screen.ImageScreen.route)
+            navController.navigate(Screen.ImageScreen.route) {
+                popUpTo(Screen.ImageScreen.route) { inclusive = false }
+            }
         }
     }
 }

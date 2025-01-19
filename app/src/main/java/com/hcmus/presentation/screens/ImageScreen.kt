@@ -1,10 +1,10 @@
 package com.hcmus.presentation.screens
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.util.Base64
+import android.app.DownloadManager
+import android.content.Context
+import android.net.Uri
+import android.os.Environment
 import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,45 +17,34 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat.getSystemService
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
 import com.hcmus.domain.Constants
 import com.hcmus.domain.Screen
 import com.hcmus.presentation.AiGenerateImageViewModel
+import com.hcmus.ui.theme.MyApplicationTheme
 
 @Composable
 fun ImageScreen(viewModel: AiGenerateImageViewModel, navController: NavHostController) {
 
-    val base64ImageString by viewModel.imageBase64.collectAsState()
+    val imageUrl by viewModel.imageUrl.collectAsState()
     val errorMessage by viewModel.error.collectAsState()
-    var bitmap: Bitmap? by remember { mutableStateOf(null) }
+    val context = LocalContext.current
 
-    //Create Bitmap from our base64ImageString
-    LaunchedEffect(base64ImageString) {
-        //Logging
+    LaunchedEffect(imageUrl) {
         Log.d(Constants.TAG, "Inside Launched Effect")
-        base64ImageString?.let { Log.d(Constants.TAG, "Image String: $it") }
-
-
-        base64ImageString?.let { base64 ->
-            try {
-                val decodedBytes = Base64.decode(base64, Base64.DEFAULT)
-                bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0 , decodedBytes.size)
-            } catch (e: Exception) {
-                viewModel.setError("Failed to decode image: ${e.message}")
-            }
-        }
+        imageUrl?.let { Log.d(Constants.TAG, "Image String: $it") }
     }
-
-    //Convert bitmap to ImageBitmap(accepted bitmap) -> Put ImageBitmap in Composable
 
     Column(
         modifier = Modifier
@@ -63,39 +52,80 @@ fun ImageScreen(viewModel: AiGenerateImageViewModel, navController: NavHostContr
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
-    ){
-
-        bitmap?.asImageBitmap()
-            ?.let {imageBitmap ->
-                Image(
-                    bitmap = imageBitmap,
-                    contentDescription = "Ai Generated Image",
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+    ) {
+        AsyncImage(
+            model = imageUrl,
+            contentDescription = "Photo in",
+            contentScale = ContentScale.Fit,
+        )
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
-        ){
-            Button(onClick = { navController.navigate(Screen.HomeScreen.route) }) {
-                Text(text = "Back")
-            }
-
-
-            Button(onClick = { }){
-                Text(text = "Save")
+        ) {
+            Button(
+                onClick = {
+                    navController.navigate(Screen.HomeScreen.route) {
+                        popUpTo(Screen.HomeScreen.route) { inclusive = false }
+                    }
+                },
+                modifier = Modifier.padding(
+                    horizontal = 6.dp
+                )
+            ) {
+                Text(text = "Back", color = Color.White)
             }
         }
 
-        // Show Error if Available
         errorMessage?.let { error ->
             Text(text = "Error: $error", fontSize = 16.sp, color = Color.Red)
         }
-
     }
+}
 
+@Preview(showBackground = true)
+@Composable
+private fun DefaultPreview() {
+    MyApplicationTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(text = "Preview of Image Screen", fontSize = 20.sp)
 
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = { },
+                    modifier = Modifier.padding(
+                        horizontal = 6.dp
+                    )
+                ) {
+                    Text(text = "Back", color = Color.White)
+                }
 
+                Button(
+                    onClick = {
+
+                    },
+                    modifier = Modifier.padding(
+                        horizontal = 6.dp
+                    )
+                ) {
+                    Text(text = "Save", color = Color.White)
+                }
+            }
+        }
+    }
 }

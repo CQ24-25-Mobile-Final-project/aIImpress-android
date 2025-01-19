@@ -1,9 +1,11 @@
 package com.hcmus.ui.display
 
 import android.content.ClipboardManager
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Environment
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -42,11 +44,11 @@ import kotlinx.coroutines.runBlocking
 import com.hcmus.ui.components.MediaFileManager
 import com.hcmus.ui.components.getPhotoDetail
 import showMoreOptions
+import java.io.File
 
 @Composable
 fun ImageDetailScreen(photoUri: String, navController: NavController) {
     Log.d("ImageGalleryScreen", "Calling SmartAlbumOrganizer with URI: $photoUri")
-    val decodedUri = Uri.decode(photoUri)
     val showResult = remember { mutableStateOf(false) }
     val recognizedText = remember { mutableStateOf("") }
     val context = LocalContext.current
@@ -66,7 +68,13 @@ fun ImageDetailScreen(photoUri: String, navController: NavController) {
             .fillMaxSize()
     ) {
         // Top bar
-        DetailTopBar(navController, photoUri = photoUri, albumViewModel, photoViewModel, mediaFileViewModel)
+        DetailTopBar(
+            navController,
+            photoUri = photoUri,
+            albumViewModel,
+            photoViewModel,
+            mediaFileViewModel
+        )
 
         // Box to overlay button or text result on image
         Box(
@@ -79,7 +87,7 @@ fun ImageDetailScreen(photoUri: String, navController: NavController) {
                 painter = rememberAsyncImagePainter(model = Uri.parse(photoUri)),
                 contentDescription = "Image Detail",
                 modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Fit
             )
             if (tagName != "") {
                 Text(
@@ -90,7 +98,10 @@ fun ImageDetailScreen(photoUri: String, navController: NavController) {
                         .align(Alignment.TopStart)
                         .offset(x = 4.dp, y = 4.dp) // Tạo margin với offset
                         .border(1.dp, Color.Gray, RoundedCornerShape(6.dp))
-                        .background(Color.LightGray.copy(alpha = 0.4f), shape = RoundedCornerShape(6.dp))
+                        .background(
+                            Color.LightGray.copy(alpha = 0.4f),
+                            shape = RoundedCornerShape(6.dp)
+                        )
                 )
             }
             if (!showResult.value) {
@@ -123,7 +134,11 @@ fun ImageDetailScreen(photoUri: String, navController: NavController) {
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally) // Center the button horizontally
                             .padding(16.dp), // Add padding to give space around the button
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray.copy(alpha = 0.5f))
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.LightGray.copy(
+                                alpha = 0.5f
+                            )
+                        )
                     ) {
                         Text(text = "Copy Text", color = Color.White)
                     }
@@ -150,7 +165,13 @@ fun ImageDetailScreen(photoUri: String, navController: NavController) {
 // TopBar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailTopBar(navController: NavController, photoUri: String, albumViewModel: AlbumViewModel, photoViewModel: PhotoViewModel, mediaFileViewModel: MediaFileViewModel) {
+fun DetailTopBar(
+    navController: NavController,
+    photoUri: String,
+    albumViewModel: AlbumViewModel,
+    photoViewModel: PhotoViewModel,
+    mediaFileViewModel: MediaFileViewModel
+) {
     val isHeartPressed = remember { mutableStateOf(false) }
     val isTagPressed = remember { mutableStateOf(false) }
 
@@ -163,7 +184,7 @@ fun DetailTopBar(navController: NavController, photoUri: String, albumViewModel:
 
     LaunchedEffect(photoUri) {
         val tag = mediaFileViewModel.getTagByUri(photoUri)
-        
+
         if (tag != "") {
             isTagPressed.value = true
         } else {
@@ -171,7 +192,11 @@ fun DetailTopBar(navController: NavController, photoUri: String, albumViewModel:
         }
     }
 
-    val isFavorite = albumViewModel.albums.value?.any { it.first == "Favorite" && it.second.contains(Uri.parse(photoUri)) } == true
+    val isFavorite = albumViewModel.albums.value?.any {
+        it.first == "Favorite" && it.second.contains(
+            Uri.parse(photoUri)
+        )
+    } == true
     isHeartPressed.value = isFavorite
 
     val showTagPicker = remember { mutableStateOf(false) }
@@ -319,8 +344,11 @@ fun DetailBottomBar(navController: NavController, photoUri: String) {
             isSelected = selectedItem.value == 1,
             iconRes = R.drawable.delete_icon,
             contentDescription = "Delete",
-            onClick = { selectedItem.value = 1
-            navController.navigate("trash_album_screen")}
+            onClick = {
+                selectedItem.value = 1
+                deleteFileByUri(context.contentResolver, Uri.parse(photoUri))
+                navController.navigate("gallery")
+            }
         )
 
         BottomBarItem(
@@ -340,7 +368,7 @@ fun DetailBottomBar(navController: NavController, photoUri: String) {
             contentDescription = "Share icon",
             onClick = {
                 selectedItem.value = 3
-	                val shareIntent: Intent = Intent().apply {
+                val shareIntent: Intent = Intent().apply {
                     action = Intent.ACTION_SEND
                     putExtra(Intent.EXTRA_STREAM, Uri.parse(photoUri))
                     type = "image/jpeg"
@@ -349,7 +377,7 @@ fun DetailBottomBar(navController: NavController, photoUri: String) {
             }
         )
 
-       	BottomBarItem(
+        BottomBarItem(
             isSelected = selectedItem.value == 4,
             iconRes = R.drawable.caption_icon,
             contentDescription = "Caption",
@@ -366,9 +394,10 @@ fun DetailBottomBar(navController: NavController, photoUri: String) {
             contentDescription = "More",
             onClick = {
                 selectedItem.value = 5
-                showDialog.value = true },
+                showDialog.value = true
+            },
 
-        )
+            )
 
     }
     if (showDialog.value) {
@@ -401,8 +430,22 @@ fun BottomBarItem(
         )
     }
 }
+
 fun copyTextToClipboard(context: Context, text: String) {
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     val clip = android.content.ClipData.newPlainText("Recognized Text", text)
     clipboard.setPrimaryClip(clip)
+}
+
+private fun deleteFileByUri(contentResolver: ContentResolver, uri: Uri) {
+    try {
+        val deletedRows = contentResolver.delete(uri, null, null)
+        if (deletedRows != null && deletedRows > 0) {
+            Log.d("DeleteFile", "File deleted successfully: $uri")
+        } else {
+            Log.d("DeleteFile", "File deletion failed or file not found: $uri")
+        }
+    } catch (e: Exception) {
+        Log.e("DeleteFile", "Error deleting file: ${e.message}")
+    }
 }

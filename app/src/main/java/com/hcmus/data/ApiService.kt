@@ -9,6 +9,6 @@ data class ImageRequest(val prompt: String)
 data class ImageResponse(val image: String)
 
 interface ApiService {
-    @POST("generate-image") //sending prompts(or requests)
-    suspend fun generateImage(@Body request: ImageRequest): Response<ImageResponse> //get an answer
+    @POST("generate-image")
+    suspend fun generateImage(@Body request: ImageRequest): Response<ImageResponse>
 }

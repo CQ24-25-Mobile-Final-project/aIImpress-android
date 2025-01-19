@@ -13,23 +13,25 @@ import kotlinx.coroutines.launch
 
 
 class AiGenerateImageViewModel(private val repository: ImageRepository) : ViewModel() {
-    private val _imageBase64 = MutableStateFlow<String?>(null)
-    val imageBase64: StateFlow<String?> = _imageBase64
+    private val _imageUrl = MutableStateFlow<String?>(null)
+    val imageUrl: StateFlow<String?> = _imageUrl
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
     fun generateImage(prompt: String) {
         viewModelScope.launch {
-            _imageBase64.value = Constants.LOADING
+            _imageUrl.value = Constants.LOADING
+            Log.d(Constants.TAG, "GENERATING IMAGE with prompt: $prompt")
             val result = repository.generateImage(prompt)
             result
-                .onSuccess { imageBase64 ->
-                    _imageBase64.value = imageBase64
-                    Log.d(Constants.TAG, "Base64Image Value found!")
+                .onSuccess { imgUrl ->
+                    _imageUrl.value = imgUrl
+                    Log.d(Constants.TAG, "Image generated successfully: $imgUrl")
                     _error.value = null
                 }
                 .onFailure { throwable ->
+                    Log.e(Constants.TAG, "Error generating image: ${throwable.message}")
                     setError(throwable.message ?: "Unknown error occurred")
                 }
         }

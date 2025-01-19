@@ -59,11 +59,11 @@ class MainActivity : FragmentActivity() {
 
     // Thiết lập giao diện với Jetpack Compose
     setContent {
-      AiImageGeneratorTheme {
-        val navController = rememberNavController()
-        Navigation(viewModel, navController)
-
-      }
+//      AiImageGeneratorTheme {
+//        val navController = rememberNavController()
+//        Navigation(viewModel, navController)
+//
+//      }
       MyApplicationTheme(dynamicColor = false) {
         val navController = rememberNavController()
 

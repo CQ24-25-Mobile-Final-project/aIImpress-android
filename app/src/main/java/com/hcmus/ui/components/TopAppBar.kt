@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -87,7 +88,7 @@ fun GalleryTopBar(
         navController.navigate(Screen.HomeScreen.route) // Điều hướng sang HomeScreen
       }) {
       Icon(
-          imageVector = Icons.Default.Add,
+          imageVector = Icons.Default.AutoAwesome,
           contentDescription = "Add Icon",
           tint = MaterialTheme.colorScheme.primary,
           modifier = Modifier.size(24.dp)

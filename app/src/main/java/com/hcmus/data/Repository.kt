@@ -16,7 +16,6 @@ class ImageRepositoryImpl(private val apiService: ApiService) : ImageRepository 
         return try {
             val response = apiService.generateImage(ImageRequest(prompt))
             if (response.isSuccessful) {
-                // Safely extract the image data
                 response.body()?.let {
                     Result.success(it.image)
                 } ?: Result.failure(Exception("Response body is null"))
