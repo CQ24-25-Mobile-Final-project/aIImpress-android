@@ -221,12 +221,7 @@ fun MyAlbumScreen(navController: NavController) {
                         contentDescription = if (isGridView) "Switch to grid view" else "Switch to list view"
                     )
                 }
-                IconButton(onClick = { showPopupAddNewAlbum = !showPopupAddNewAlbum }) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = if (isGridView) "Switch to grid view" else "Switch to list view"
-                    )
-                }
+             
             }
 
             if (isGridView) {
