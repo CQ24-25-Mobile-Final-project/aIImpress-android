@@ -132,57 +132,14 @@ fun MyAlbumScreen(navController: NavController) {
                     }
                 },
                 actions= {// cái nút ba chấm
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clickable { expanded = !expanded }
-                            .padding(8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        
-                        SmallExample(onClick = { showPopupAddNewAlbum = true })
-                    }
 
-                    if (showPopupAddNewAlbum) {
-                        AlertDialog(
-                            onDismissRequest = { showPopupAddNewAlbum = false },
-                            title = {
-                                Text(
-                                    "Create New Album",
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                            },
-                            text = {
-                                Column {
-                                    TextField(
-                                        value = NewAlbumName,
-                                        onValueChange = { NewAlbumName = it },
-                                        label = { Text(text = "Album name") },
-                                        singleLine = true,
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                }
-                            },
-                            confirmButton = {
-                                TextButton(
-                                    onClick = {
-                                        if (NewAlbumName.isNotBlank()) {
-                                            showPopupAddNewAlbum = false
-                                            albumViewModel.addAlbumName(NewAlbumName)
-                                            navController.navigate("SelectImageForAlbum")
-                                        }
-                                    }
-                                ) {
-                                    Text("OK")
-                                }
-                            },
-                            dismissButton = {
-                                TextButton(onClick = { showPopupAddNewAlbum = false }) {
-                                    Text("Cancel")
-                                }
-                            }
+                    IconButton(onClick = { }) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Not handle"
                         )
                     }
+
                 }
             )
         },
@@ -217,14 +174,9 @@ fun MyAlbumScreen(navController: NavController) {
                 BottomSheetExample(albumViewModel)
                 IconButton(onClick = { isGridView = !isGridView }) {
                     Icon(
-                        imageVector = if (isGridView) Icons.Default.Check else Icons.Default.CheckCircle,
-                        contentDescription = if (isGridView) "Switch to grid view" else "Switch to list view"
-                    )
-                }
-                IconButton(onClick = { showPopupAddNewAlbum = !showPopupAddNewAlbum }) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = if (isGridView) "Switch to grid view" else "Switch to list view"
+                        painter = painterResource(id = if (isGridView) R.drawable.ic_list else R.drawable.ic_grid),
+                        contentDescription = if (isGridView) "Switch to grid view" else "Switch to list view",
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             }
@@ -279,6 +231,15 @@ fun MyAlbumScreen(navController: NavController) {
                     }
                 }
             }
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .padding(bottom = 60.dp),  // Ensure space for the button
+            contentAlignment = Alignment.BottomEnd  // Align the button to the bottom right
+        ) {
+            SmallExample(onClick = { showPopupAddNewAlbum = true })
         }
     }
 
