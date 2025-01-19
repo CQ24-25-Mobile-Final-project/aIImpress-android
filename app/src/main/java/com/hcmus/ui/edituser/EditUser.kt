@@ -8,11 +8,12 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -20,9 +21,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.foundation.Image
-import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -75,7 +73,7 @@ fun ProfileScreen(navController: NavController,profileViewModel: ProfileViewMode
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color(0xFFF8F8F8))
+                .background(MaterialTheme.colorScheme.background)
         ) {
             profileState?.let {
                 ProfileHeader(it.value?.avatarUrl.toString())
@@ -85,19 +83,19 @@ fun ProfileScreen(navController: NavController,profileViewModel: ProfileViewMode
     }
 }
 
-
 @Composable
 fun ProfileHeader(selectedImageUri: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(220.dp)
-            .background(Color(0xFFEEF2F5))
+            .background(MaterialTheme.colorScheme.primary)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.BottomCenter),
+                .align(Alignment.BottomCenter)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
@@ -121,13 +119,13 @@ fun ProfileHeader(selectedImageUri: String) {
                     )
                 }
                 Icon(
-                    painter = painterResource(id = R.drawable.edit_icon), // Replace with pencil icon resource
+                    painter = painterResource(id = R.drawable.edit_icon),
                     contentDescription = "Edit",
-                    tint = Color.Black,
+                    tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .size(24.dp)
-                        .background(Color.White, CircleShape)
+                        .background(MaterialTheme.colorScheme.background, CircleShape)
                         .padding(4.dp)
                 )
             }
@@ -136,59 +134,12 @@ fun ProfileHeader(selectedImageUri: String) {
                 text = "Puerto Rico",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onPrimary
             )
         }
     }
 }
 
-@Composable
-fun ProfileBody() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
-        ProfileOptionSection("Edit profile information")
-        ProfileOptionSection(
-            title = "Notifications",
-            action = { Text(text = "ON", color = MaterialTheme.colorScheme.primary) }
-        )
-        ProfileOptionSection(
-            title = "Language",
-            action = { Text(text = "English", color = MaterialTheme.colorScheme.primary) }
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        ProfileOptionSection("Security")
-        ProfileOptionSection(
-            title = "Theme",
-            action = { Text(text = "Light mode", color = MaterialTheme.colorScheme.primary) }
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        ProfileOptionSection("Help & Support")
-        ProfileOptionSection("Contact us")
-        ProfileOptionSection("Privacy policy")
-    }
-}
-
-@Composable
-fun ProfileOptionSection(
-    title: String,
-    action: @Composable (() -> Unit)? = null,
-    onClick: (() -> Unit)? = null
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .clickable(enabled = onClick != null) { onClick?.invoke() },
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(text = title, fontSize = 16.sp, color = Color.Black)
-        action?.invoke()
-    }
-}
 @Composable
 fun ProfileBody(navController: NavController) {
     val credentialRepository = CredentialDatabase.getInstance(LocalContext.current).credentialRepository()
@@ -197,45 +148,90 @@ fun ProfileBody(navController: NavController) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
+            .verticalScroll(rememberScrollState()) // Thêm cuộn dọc
     ) {
         ProfileOptionSection(
+            icon = R.drawable.ic_user,
             title = "Edit profile information",
             onClick = { navController.navigate("editProfile") }
         )
         ProfileOptionSection(
+            icon = R.drawable.ic_notification,
             title = "Notifications",
             action = { Text(text = "ON", color = MaterialTheme.colorScheme.primary) }
         )
         ProfileOptionSection(
+            icon = R.drawable.ic_language,
             title = "Language",
             action = { Text(text = "English", color = MaterialTheme.colorScheme.primary) }
         )
-        Spacer(modifier = Modifier.height(8.dp))
-        ProfileOptionSection("Security")
         ProfileOptionSection(
+            icon = R.drawable.ic_security,
+            title = "Security"
+        )
+        ProfileOptionSection(
+            icon = R.drawable.ic_theme,
             title = "Theme",
             action = { Text(text = "Light mode", color = MaterialTheme.colorScheme.primary) }
         )
-        Spacer(modifier = Modifier.height(8.dp))
-        ProfileOptionSection("Help & Support")
-        ProfileOptionSection("Contact us")
-        ProfileOptionSection("Privacy policy")
-        Spacer(modifier = Modifier.height(8.dp))
-
         ProfileOptionSection(
+            icon = R.drawable.ic_help,
+            title = "Help & Support"
+        )
+        ProfileOptionSection(
+            icon = R.drawable.ic_contact,
+            title = "Contact us"
+        )
+        ProfileOptionSection(
+            icon = R.drawable.ic_privacy,
+            title = "Privacy policy",
+            onClick = { navController.navigate("privacy_policy") }
+        )
+        ProfileOptionSection(
+            icon = R.drawable.ic_logout,
             title = "Logout",
             onClick = {
                 credentialRepository.delete()
                 navController.navigate("login")
             }
         )
-
+        Spacer(modifier = Modifier.height(16.dp)) // Thêm khoảng trống cuối để hiển thị đẹp hơn
     }
 }
 
-
-@Preview(showBackground = true)
 @Composable
-fun PreviewProfileScreen() {
-    ProfileScreen(navController = rememberNavController())
+fun ProfileOptionSection(
+    icon: Int,
+    title: String,
+    action: @Composable (() -> Unit)? = null,
+    onClick: (() -> Unit)? = null
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .clickable(enabled = onClick != null) { onClick?.invoke() }
+            .background(
+                MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(8.dp)
+            )
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(id = icon),
+            contentDescription = title,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = title,
+            fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.weight(1f)
+        )
+        action?.invoke()
+    }
 }

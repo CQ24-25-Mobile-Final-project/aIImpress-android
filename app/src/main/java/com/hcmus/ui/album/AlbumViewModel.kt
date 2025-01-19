@@ -4,9 +4,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import android.net.Uri
-import android.util.Log
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
 
 class AlbumViewModel : ViewModel() {
     private val _albums = MutableLiveData<List<Pair<String, List<Uri>>>>()

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -27,17 +28,25 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,7 +61,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -60,19 +71,28 @@ import coil.compose.rememberAsyncImagePainter
 import com.hcmus.R
 import com.hcmus.ui.components.CustomBottomBar
 import com.hcmus.ui.components.GalleryTopBar
+import com.hcmus.ui.theme.BluePrimary
 import com.hcmus.utils.SmartAlbumOrganizer
 
 var flag = false
 var countOfImages = 0
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyAlbumScreen(navController: NavController) {
+    var expanded by remember { mutableStateOf(false)}
     var isGridView by remember { mutableStateOf(true) }
     val albumViewModel: AlbumViewModel = hiltViewModel()
     val albums by albumViewModel.albums.observeAsState(emptyList())
     var showPopupAddNewAlbum by remember { mutableStateOf(false) }
     var NewAlbumName by remember { mutableStateOf("") }
+    val menuItems = listOf("Create Album", "Add Photos")
+    val menuIcons = listOf(
+        Icons.Filled.Folder,    // Create Folder
+        Icons.Filled.Add,       // Add Items
 
+    )
+    var showAlertDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val photos = remember { mutableStateOf<List<Uri>>(emptyList()) }
     photos.value = fetchImages(context)
@@ -93,6 +113,79 @@ fun MyAlbumScreen(navController: NavController) {
     }
 
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Album") },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        // Điều hướng về màn hình chính và xóa các màn hình trung gian
+                        navController.navigate("gallery") {
+                            popUpTo("gallery") { inclusive = false }
+                        }
+                    }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.back_icon),
+                            contentDescription = "Back",
+                            tint = BluePrimary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                },
+                actions= {// cái nút ba chấm
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clickable { expanded = !expanded }
+                            .padding(8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        
+                        SmallExample(onClick = { showPopupAddNewAlbum = true })
+                    }
+
+                    if (showPopupAddNewAlbum) {
+                        AlertDialog(
+                            onDismissRequest = { showPopupAddNewAlbum = false },
+                            title = {
+                                Text(
+                                    "Create New Album",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                            },
+                            text = {
+                                Column {
+                                    TextField(
+                                        value = NewAlbumName,
+                                        onValueChange = { NewAlbumName = it },
+                                        label = { Text(text = "Album name") },
+                                        singleLine = true,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        if (NewAlbumName.isNotBlank()) {
+                                            showPopupAddNewAlbum = false
+                                            albumViewModel.addAlbumName(NewAlbumName)
+                                            navController.navigate("SelectImageForAlbum")
+                                        }
+                                    }
+                                ) {
+                                    Text("OK")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showPopupAddNewAlbum = false }) {
+                                    Text("Cancel")
+                                }
+                            }
+                        )
+                    }
+                }
+            )
+        },
         bottomBar = {
             var selectedIndex = 1
             CustomBottomBar(
@@ -101,6 +194,7 @@ fun MyAlbumScreen(navController: NavController) {
                     selectedIndex = index
                     if (index == 3) navController.navigate("photo_map")
                     if (index == 0) navController.navigate("gallery")
+
                 },
                 onAddClick = {
                     navController.navigate("appContent")
@@ -369,10 +463,12 @@ fun RadioButtonOption(text: String, selectedOption: String, onSelect: () -> Unit
         Text(text = text, modifier = Modifier.padding(start = 8.dp))
     }
 }
-
-@Preview(showBackground = true)
 @Composable
-fun MyAlbumScreenPreview() {
-    val mockNavController = rememberNavController()
-    MyAlbumScreen(navController = mockNavController)
+fun SmallExample(onClick: () -> Unit) {
+    SmallFloatingActionButton(
+        onClick = { onClick() },
+        modifier = Modifier.size(60.dp)
+    ) {
+        Icon(Icons.Filled.Add, "Small floating action button.", tint = BluePrimary)
+    }
 }

@@ -39,6 +39,8 @@ import com.hcmus.ui.textrecognize.recognizeText
 import com.hcmus.ui.album.AlbumViewModel
 import com.hcmus.ui.viewmodel.MediaFileViewModel
 import kotlinx.coroutines.runBlocking
+import com.hcmus.ui.components.MediaFileManager
+import com.hcmus.ui.components.getPhotoDetail
 import showMoreOptions
 
 @Composable
@@ -91,9 +93,6 @@ fun ImageDetailScreen(photoUri: String, navController: NavController) {
                         .background(Color.LightGray.copy(alpha = 0.4f), shape = RoundedCornerShape(6.dp))
                 )
             }
-
-
-
             if (!showResult.value) {
                 // Button overlay (only show when no result)
                 Button(
@@ -147,7 +146,6 @@ fun ImageDetailScreen(photoUri: String, navController: NavController) {
         DetailBottomBar(navController = navController, photoUri = photoUri)
     }
 }
-
 
 // TopBar
 @OptIn(ExperimentalMaterial3Api::class)

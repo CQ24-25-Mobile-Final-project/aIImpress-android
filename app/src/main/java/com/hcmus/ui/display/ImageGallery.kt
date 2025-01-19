@@ -121,7 +121,7 @@ fun PhotoGalleryScreen(navController: NavController) {
                                     }
                             ) {
                                 AsyncImage(
-                                    model = photo.url ?: photo.uri,
+                                    model =  photo.uri,
                                     modifier = Modifier.fillMaxSize(),
                                     contentDescription = null,
                                     contentScale = ContentScale.Crop
