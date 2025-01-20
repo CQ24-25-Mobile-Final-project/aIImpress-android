@@ -179,10 +179,6 @@ fun Navigation(viewModel: AiGenerateImageViewModel, navController: NavHostContro
                         Toast.makeText(context, "Login Success", Toast.LENGTH_SHORT).show()
 
                         // Điều hướng đến màn hình Gallery
-                        val creds = Credential()
-                        creds.email = user.email!!
-                        creds.token = jwtManager.sign()
-                        credentialRepository.insert(creds)
                         navController.navigate("gallery") {
                             popUpTo("login") { inclusive = true }
                         }
